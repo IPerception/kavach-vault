@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <!--
+        Phase 3 schema update: drop the redundant iv column from credential.
+
+        The Phase 3 EncryptionService embeds the 12-byte IV at the start of every
+        cipher blob ([IV | ciphertext | GCM tag]). Storing IVs separately in their
+        own column is therefore redundant and was removed.
+
+        SQLite 3.35+ supports ALTER TABLE ... DROP COLUMN.
+        sqlite-jdbc 3.47.1.0 bundles SQLite 3.47.x so this is safe.
+    -->
+    <changeSet id="006-drop-credential-iv-column" author="kavach">
+        <sql>ALTER TABLE credential DROP COLUMN iv</sql>
+    </changeSet>
+
+</databaseChangeLog>

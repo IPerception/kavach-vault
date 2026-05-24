@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <!--
+        Raw SQL changesets are used here instead of Liquibase abstract change types.
+        SQLite has quirks that cause some abstract types (addUniqueConstraint,
+        addForeignKeyConstraint) to generate unsupported SQL. Using raw SQL gives
+        full control and avoids dialect-specific surprises.
+    -->
+
+    <!-- vault_user: single-row table for the vault owner account -->
+    <changeSet id="002-create-vault-user" author="kavach">
+        <sql>
+            CREATE TABLE vault_user (
+                id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+                username             TEXT    NOT NULL UNIQUE,
+                master_password_hash TEXT    NOT NULL,
+                pbkdf2_salt          BLOB    NOT NULL,
+                email                TEXT    NOT NULL,
+                created_at           TEXT    NOT NULL
+            )
+        </sql>
+    </changeSet>
+
+    <!-- credential: one row per stored password, all sensitive data AES-256-GCM encrypted -->
+    <changeSet id="003-create-credential" author="kavach">
+        <sql>
+            CREATE TABLE credential (
+                id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id            INTEGER NOT NULL REFERENCES vault_user(id),
+                purpose            TEXT    NOT NULL,
+                username           TEXT    NOT NULL,
+                encrypted_password BLOB    NOT NULL,
+                dek_encrypted      BLOB    NOT NULL,
+                iv                 BLOB    NOT NULL,
+                created_at         TEXT    NOT NULL,
+                updated_at         TEXT    NOT NULL
+            )
+        </sql>
+        <!-- Unique index enforces the (user_id, purpose) business rule -->
+        <sql>
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_credential_user_purpose
+                ON credential (user_id, purpose)
+        </sql>
+    </changeSet>
+
+    <!-- audit_log: append-only event history, credential_id is nullable for account-level events -->
+    <changeSet id="004-create-audit-log" author="kavach">
+        <sql>
+            CREATE TABLE audit_log (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id       INTEGER NOT NULL REFERENCES vault_user(id),
+                credential_id INTEGER REFERENCES credential(id),
+                action        TEXT    NOT NULL,
+                timestamp     TEXT    NOT NULL,
+                ip_address    TEXT
+            )
+        </sql>
+    </changeSet>
+
+    <!-- app_config: encrypted key-value store for SMTP and other runtime settings -->
+    <changeSet id="005-create-app-config" author="kavach">
+        <sql>
+            CREATE TABLE app_config (
+                config_key      TEXT PRIMARY KEY NOT NULL,
+                value_encrypted BLOB NOT NULL,
+                updated_at      TEXT NOT NULL
+            )
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

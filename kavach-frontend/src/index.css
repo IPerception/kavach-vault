@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes pop-in {
+  0%   { transform: scale(0.5); opacity: 0; }
+  65%  { transform: scale(1.25); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.25s ease-out forwards;
+}
+
+body {
+  background-color: #09090b;
+  background-image: radial-gradient(rgb(63 63 70 / 0.45) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+/* Amber (default) */
+:root, [data-theme="amber"] {
+  --kavach-50:  255 251 235;
+  --kavach-400: 251 191 36;
+  --kavach-500: 245 158 11;
+  --kavach-600: 217 119 6;
+  --kavach-700: 180 83 9;
+  --kavach-950: 120 53 15;
+}
+
+[data-theme="sky"] {
+  --kavach-50:  240 249 255;
+  --kavach-400: 56 189 248;
+  --kavach-500: 14 165 233;
+  --kavach-600: 2 132 199;
+  --kavach-700: 3 105 161;
+  --kavach-950: 8 47 73;
+}
+
+[data-theme="emerald"] {
+  --kavach-50:  236 253 245;
+  --kavach-400: 52 211 153;
+  --kavach-500: 16 185 129;
+  --kavach-600: 5 150 105;
+  --kavach-700: 4 120 87;
+  --kavach-950: 2 44 34;
+}
+
+[data-theme="rose"] {
+  --kavach-50:  255 241 242;
+  --kavach-400: 251 113 133;
+  --kavach-500: 244 63 94;
+  --kavach-600: 225 29 72;
+  --kavach-700: 190 18 60;
+  --kavach-950: 76 5 25;
+}
+
+[data-theme="violet"] {
+  --kavach-50:  245 243 255;
+  --kavach-400: 167 139 250;
+  --kavach-500: 139 92 246;
+  --kavach-600: 124 58 237;
+  --kavach-700: 109 40 217;
+  --kavach-950: 46 16 101;
+}

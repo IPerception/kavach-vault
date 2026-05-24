@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.kavach</groupId>
+        <artifactId>kavach</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kavach-backend</artifactId>
+    <name>Kavach Backend</name>
+
+    <dependencies>
+
+        <!-- Spring Boot Starters -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- SQLite -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>${sqlite-jdbc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-community-dialects</artifactId>
+        </dependency>
+
+        <!-- Liquibase -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
+        <!-- JWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Rate Limiting -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>${bucket4j.version}</version>
+        </dependency>
+
+        <!-- TOTP (RFC 6238) -->
+        <dependency>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- SpringDoc OpenAPI (Swagger UI) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- Frontend static resources (served from META-INF/resources/ in the fat jar) -->
+        <dependency>
+            <groupId>com.kavach</groupId>
+            <artifactId>kavach-frontend</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- The Spring Boot fat jar is the single distributable artifact. -->
+        <finalName>kavach</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Mockito 5 on JDK 21+ cannot self-attach. Load mockito-core
+                         as a Java agent so the inline mock maker works without warnings. -->
+                    <argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <!-- Lombok must come before MapStruct -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+            Native installer profile. Produces a self-contained platform-native
+            installer that bundles a trimmed JRE. Users do not need Java installed.
+
+            Usage:
+              mvn clean package -pl kavach-backend -P native-installer
+
+            Output: kavach-backend/target/installer/
+              Windows  : Kavach-1.0.0.exe  (requires WiX 3.x for .msi; app-image is default)
+              macOS    : Kavach-1.0.0.dmg
+              Linux    : kavach_1.0.0_amd64.deb
+
+            To produce a specific format add: -Djpackage.type=msi|dmg|deb|rpm|exe|pkg|app-image
+            The default is the platform-native format; app-image works on all platforms
+            without extra tooling (no WiX/dpkg needed).
+
+            Prerequisites: JDK 21 (jpackage is included). On Windows, install WiX 3.x from
+            wixtoolset.org for .msi output. On Linux, install dpkg-dev or rpm for .deb/.rpm.
+        -->
+        <profile>
+            <id>native-installer</id>
+            <build>
+                <plugins>
+                    <!-- Step 1: copy kavach.jar into a clean staging directory.
+                         jpackage input dir must contain ONLY the jars to bundle. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>stage-jar</id>
+                                <phase>package</phase>
+                                <goals><goal>copy-resources</goal></goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/jpackage-input</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>kavach.jar</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Step 2: invoke the JDK-bundled jpackage tool. -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <phase>install</phase>
+                                <goals><goal>exec</goal></goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage</executable>
+                                    <arguments>
+                                        <!-- Input: directory containing only kavach.jar -->
+                                        <argument>--input</argument>
+                                        <argument>${project.build.directory}/jpackage-input</argument>
+
+                                        <!-- Entry point -->
+                                        <argument>--main-jar</argument>
+                                        <argument>kavach.jar</argument>
+
+                                        <!-- App metadata -->
+                                        <argument>--name</argument>
+                                        <argument>Kavach</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>1.0.0</argument>
+                                        <argument>--description</argument>
+                                        <argument>Local-first personal password manager</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>Kavach</argument>
+
+                                        <!-- Output directory -->
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}/installer</argument>
+
+                                        <!-- Installer type: omit for platform default.
+                                             Override with -Djpackage.type=msi|dmg|deb|app-image -->
+                                        <argument>--type</argument>
+                                        <argument>${jpackage.type}</argument>
+
+                                        <!-- JVM tuning passed through to the bundled JRE -->
+                                        <argument>--java-options</argument>
+                                        <argument>-Xmx256m</argument>
+
+                                        <!-- Store DB and port file in the user home dir so they
+                                             survive app upgrades and are writable without admin rights.
+                                             Windows: %USERPROFILE%\.kavach\
+                                             macOS/Linux: ~/.kavach/ -->
+                                        <argument>--java-options</argument>
+                                        <argument>-Dkavach.data.dir=${user.home}/.kavach</argument>
+                                        <argument>--java-options</argument>
+                                        <argument>-Dspring.datasource.url=jdbc:sqlite:${user.home}/.kavach/kavach.db</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+
+            <properties>
+                <!-- Default to app-image (no extra tooling needed).
+                     Override on the command line for a real installer format. -->
+                <jpackage.type>app-image</jpackage.type>
+            </properties>
+        </profile>
+    </profiles>
+</project>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <!--
+        Liquibase master changelog — Phase 1 (scaffold only).
+
+        Liquibase is the single source of truth for the database schema.
+        It runs on every application startup, applies any new changesets in order,
+        and records them in the DATABASECHANGELOG table so they are never re-applied.
+
+        Phase 2 will add include entries for the vault_user, credential, audit_log,
+        and app_config table definitions.
+    -->
+
+    <include file="db/changelog/002-schema.xml"/>
+    <include file="db/changelog/003-drop-iv-column.xml"/>
+    <include file="db/changelog/004-add-totp-secret.xml"/>
+    <include file="db/changelog/005-add-url-notes.xml"/>
+
+</databaseChangeLog>

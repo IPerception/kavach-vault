@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="007-add-url-notes" author="kavach">
+        <sql>ALTER TABLE credential ADD COLUMN url TEXT</sql>
+    </changeSet>
+
+    <changeSet id="008-add-notes" author="kavach">
+        <sql>ALTER TABLE credential ADD COLUMN notes TEXT</sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,32 @@
+# Maven build output
+target/
+*.jar
+!kavach-frontend/pom.xml
+
+# Maven wrapper cache
+.mvn/repository/
+
+# Node (frontend)
+kavach-frontend/node/
+kavach-frontend/node_modules/
+kavach-frontend/dist/
+kavach-frontend/coverage/
+
+# Runtime files - generated on every start, not source
+kavach.port
+kavach.db
+kavach.db.backup-*
+
+# IDE - IntelliJ (workspace-specific files already in .idea/.gitignore)
+*.iml
+.idea/modules.xml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/encodings.xml
+
+# IDE - VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
