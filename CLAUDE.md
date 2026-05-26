@@ -37,6 +37,32 @@ cd kavach-frontend && npx vitest run src/hooks/useOtpFlow.test.ts
 
 The launcher script (`start.bat` / `start.sh`) tries ports 8080 → 8090 → 8100 on conflict and auto-backs up `kavach.db` on startup (retains last 5 copies).
 
+## Releasing
+
+```bash
+# 1. Build the app-image (from project root)
+mvn clean install -P native-installer
+
+# 2. Delete any runtime files left in dist/Kavach/ from testing (kavach.port, kavach.db)
+# 3. Zip dist/Kavach/ manually via File Explorer -> right-click -> Compress to ZIP
+#    Name it: Kavach-vX.Y.Z-windows-x64.zip
+
+# 4. Commit all changes, then tag and push
+git tag vX.Y.Z
+git push origin main
+git push origin vX.Y.Z
+
+# 5. Create GitHub release with the zip as a release asset
+gh release create vX.Y.Z "dist/Kavach-vX.Y.Z-windows-x64.zip" \
+  --title "Kavach vX.Y.Z" \
+  --notes "Release notes here"
+```
+
+Notes:
+- WiX 3.x is installed at C:\Program Files (x86)\WiX Toolset v3.14\bin -- add to PATH to build .exe installers
+- .exe installer format is blocked by Windows Smart App Control; use app-image (default) for distribution
+- dist/ is gitignored; the zip is attached only as a GitHub release asset
+
 Swagger UI available at `http://localhost:8080/swagger-ui.html` during development.
 
 ## Architecture
