@@ -186,8 +186,8 @@
             Native installer profile. Produces a self-contained platform-native
             installer that bundles a trimmed JRE. Users do not need Java installed.
 
-            Usage:
-              mvn clean package -pl kavach-backend -P native-installer
+            Usage (run from project root so the frontend is built first):
+              mvn clean install -P native-installer
 
             Output: kavach-backend/target/installer/
               Windows  : Kavach-1.0.0.exe  (requires WiX 3.x for .msi; app-image is default)
@@ -261,27 +261,32 @@
                                         <argument>--vendor</argument>
                                         <argument>Kavach</argument>
 
-                                        <!-- Output directory -->
+                                        <!-- Output directory: placed at project root so it is easy to find -->
                                         <argument>--dest</argument>
-                                        <argument>${project.build.directory}/installer</argument>
+                                        <argument>${maven.multiModuleProjectDirectory}/dist</argument>
 
                                         <!-- Installer type: omit for platform default.
                                              Override with -Djpackage.type=msi|dmg|deb|app-image -->
                                         <argument>--type</argument>
                                         <argument>${jpackage.type}</argument>
 
+                                        <!-- Include all JDK modules: Spring Boot fat jars are
+                                             non-modular so jlink cannot infer the module set. -->
+                                        <argument>--add-modules</argument>
+                                        <argument>ALL-MODULE-PATH</argument>
+
                                         <!-- JVM tuning passed through to the bundled JRE -->
                                         <argument>--java-options</argument>
                                         <argument>-Xmx256m</argument>
 
-                                        <!-- Store DB and port file in the user home dir so they
-                                             survive app upgrades and are writable without admin rights.
-                                             Windows: %USERPROFILE%\.kavach\
-                                             macOS/Linux: ~/.kavach/ -->
-                                        <argument>--java-options</argument>
-                                        <argument>-Dkavach.data.dir=${user.home}/.kavach</argument>
-                                        <argument>--java-options</argument>
-                                        <argument>-Dspring.datasource.url=jdbc:sqlite:${user.home}/.kavach/kavach.db</argument>
+                                        <!-- Data dir and datasource URL are derived at runtime in KavachApplication.main()
+                                             from user.home, so they work correctly on any machine. Do not pass them
+                                             here: Maven resolves user.home at build time, which would hardcode the
+                                             build machine username into the installer. -->
+
+                                        <!-- Remove the line below to suppress the console window in production.
+                                             Keeping it shows startup errors when launching via Kavach.exe. -->
+                                        <argument>--win-console</argument>
                                     </arguments>
                                 </configuration>
                             </execution>

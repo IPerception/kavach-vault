@@ -12,6 +12,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Full build (produces kavach.jar with frontend bundled)
 mvn clean package
 
+# Native app-image installer (run from project root -- builds frontend first, then packages)
+# Output: dist/Kavach/Kavach.exe (Windows)
+mvn clean install -P native-installer
+
 # Backend only (dev mode)
 mvn spring-boot:run -pl kavach-backend
 

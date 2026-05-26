@@ -3,6 +3,9 @@ target/
 *.jar
 !kavach-frontend/pom.xml
 
+# Native installer output (jpackage app-image)
+dist/
+
 # Maven wrapper cache
 .mvn/repository/
 
@@ -17,12 +20,14 @@ kavach.port
 kavach.db
 kavach.db.backup-*
 
-# IDE - IntelliJ (workspace-specific files already in .idea/.gitignore)
+# IDE - IntelliJ
 *.iml
-.idea/modules.xml
-.idea/compiler.xml
-.idea/jarRepositories.xml
-.idea/encodings.xml
+.idea/
+# Re-include the IntelliJ gitignore so it stays tracked
+!.idea/.gitignore
+
+# IntelliJ internal database
+identifier.sqlite
 
 # IDE - VS Code
 .vscode/
