@@ -27,7 +27,12 @@ mvn clean package
 java -jar kavach-backend/target/kavach.jar
 ```
 
-Then open `http://localhost:8080` in your browser.
+Then open `https://localhost:8080` in your browser.
+
+> **First launch only:** the browser will show a "Your connection is not private" warning because
+> Kavach uses a self-signed certificate for localhost HTTPS. Click **Advanced** then
+> **Proceed to localhost** to continue. You will not see this warning again in the same browser
+> session, and the cert is reused on every subsequent startup.
 
 **Option 3 — Dev mode**
 
@@ -76,7 +81,7 @@ If forgotten, vault data is unrecoverable.
 | Native app-image            | `mvn clean install -P native-installer` |
 | Backend tests               | `mvn test -pl kavach-backend`           |
 | Frontend tests              | `cd kavach-frontend && npm test`        |
-| Swagger UI (dev only)       | `http://localhost:8080/swagger-ui.html` |
+| Swagger UI (dev only)       | `https://localhost:8080/swagger-ui.html` |
 
 ---
 

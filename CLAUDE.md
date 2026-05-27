@@ -19,7 +19,7 @@ mvn clean install -P native-installer
 # Backend only (dev mode)
 mvn spring-boot:run -pl kavach-backend
 
-# Frontend dev server (with proxy to localhost:8080)
+# Frontend dev server (with proxy to https://localhost:8080)
 cd kavach-frontend && npm run dev
 
 # Run tests — backend
@@ -63,7 +63,7 @@ Notes:
 - .exe installer format is blocked by Windows Smart App Control; use app-image (default) for distribution
 - dist/ is gitignored; the zip is attached only as a GitHub release asset
 
-Swagger UI available at `http://localhost:8080/swagger-ui.html` during development.
+Swagger UI available at `https://localhost:8080/swagger-ui.html` during development.
 
 ## Architecture
 

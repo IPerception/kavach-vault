@@ -58,10 +58,13 @@ public class PortSelector implements WebServerFactoryCustomizer<ConfigurableWebS
 
     private void writePortFile(int port) {
         try {
+            String scheme = "true".equals(System.getProperty("server.ssl.enabled")) ? "https" : "http";
+            String url = scheme + "://127.0.0.1:" + port;
             Path portFile = Path.of(PORT_FILE);
-            Files.writeString(portFile, String.valueOf(port),
+            Files.writeString(portFile, url,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             portFile.toFile().deleteOnExit();
+            log.info("Kavach URL: {}", url);
         } catch (IOException e) {
             log.warn("Could not write {}: {}", PORT_FILE, e.getMessage());
         }
