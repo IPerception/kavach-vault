@@ -12,6 +12,7 @@ public class KavachApplication {
     public static void main(String[] args) throws Exception {
         String dataDir = System.getProperty("kavach.data.dir",
                 Paths.get(System.getProperty("user.home"), ".kavach").toString());
+        System.setProperty("kavach.data.dir", dataDir);
         Files.createDirectories(Path.of(dataDir));
         System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dataDir + "/kavach.db");
         SpringApplication.run(KavachApplication.class, args);

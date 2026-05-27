@@ -4,9 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { SmartphoneNfc, KeyRound, Palette, ChevronRight, X, Info, Download, Upload } from 'lucide-react'
+import { SmartphoneNfc, KeyRound, Palette, ChevronRight, X, Info, Download, Upload, FolderOpen } from 'lucide-react'
 import { changePassword, setupTotp, confirmTotp } from '../api/auth'
 import { exportVault, importVault } from '../api/credentials'
+import { getBackupDestination, setBackupDestination, clearBackupDestination, runBackupNow } from '../api/backup'
 import { useKavachStore, type KavachTheme } from '../store/useKavachStore'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -37,7 +38,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 type TotpResetStep = 'idle' | 'scanning' | 'done'
-type ActiveModal = 'password' | 'totp' | 'theme' | 'import' | null
+type ActiveModal = 'password' | 'totp' | 'theme' | 'import' | 'backup' | null
 
 const THEMES: { id: KavachTheme; label: string; color: string }[] = [
   { id: 'amber',   label: 'Amber',   color: '#f59e0b' },
@@ -158,6 +159,56 @@ export function Settings() {
     setTotpError(null)
   }
 
+  // --- backup destination ---
+  const [backupPath, setBackupPath] = useState('')
+  const [backupStatus, setBackupStatus] = useState<string | null>(null)
+  const [backupError, setBackupError] = useState<string | null>(null)
+  const [backupRunning, setBackupRunning] = useState(false)
+
+  const openBackupModal = async () => {
+    setBackupStatus(null)
+    setBackupError(null)
+    try {
+      const data = await getBackupDestination()
+      setBackupPath(data.destination)
+    } catch {
+      setBackupPath('')
+    }
+    setActiveModal('backup')
+  }
+
+  const saveBackupMutation = useMutation({
+    mutationFn: () => setBackupDestination(backupPath),
+    onSuccess: () => setBackupStatus('Destination saved.'),
+    onError: () => setBackupError('Could not save. Make sure the folder path exists.'),
+  })
+
+  const clearBackupMutation = useMutation({
+    mutationFn: clearBackupDestination,
+    onSuccess: () => { setBackupPath(''); setBackupStatus('Backup destination cleared.') },
+    onError: () => setBackupError('Failed to clear destination.'),
+  })
+
+  const handleRunNow = async () => {
+    setBackupRunning(true)
+    setBackupStatus(null)
+    setBackupError(null)
+    try {
+      const result = await runBackupNow()
+      setBackupStatus(`Backup saved to: ${result.path}`)
+    } catch {
+      setBackupError('Backup failed. Check the destination folder exists and is writable.')
+    } finally {
+      setBackupRunning(false)
+    }
+  }
+
+  const closeBackupModal = () => {
+    setActiveModal(null)
+    setBackupStatus(null)
+    setBackupError(null)
+  }
+
   const settingsItems = [
     {
       key: 'password' as const,
@@ -194,6 +245,13 @@ export function Settings() {
       title: 'Import vault',
       description: 'Restore credentials from a Kavach export file',
     },
+    {
+      key: 'backup' as const,
+      icon: <FolderOpen className="h-5 w-5 text-kavach-500" />,
+      iconBg: 'bg-kavach-500/10',
+      title: 'Backup destination',
+      description: 'Copy the database to a folder on each startup',
+    },
   ]
 
   return (
@@ -205,7 +263,7 @@ export function Settings() {
             <li key={item.key}>
               <button
                 className="flex w-full items-center gap-4 px-6 py-5 transition-colors hover:bg-zinc-800/60"
-                onClick={() => item.key === 'export' ? handleExport() : setActiveModal(item.key)}
+                onClick={() => item.key === 'export' ? handleExport() : item.key === 'backup' ? openBackupModal() : setActiveModal(item.key)}
                 disabled={item.key === 'export' && exporting}
               >
                 <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.iconBg}`}>
@@ -239,7 +297,7 @@ export function Settings() {
       {activeModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
-          onClick={activeModal === 'import' ? closeImportModal : closeModal}
+          onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
         >
           <Card
             className="w-full max-w-3xl overflow-hidden !p-0"
@@ -258,7 +316,7 @@ export function Settings() {
               {/* Right column - content */}
               <div className="relative flex flex-1 flex-col justify-center overflow-y-auto p-8">
                 <button
-                  onClick={activeModal === 'import' ? closeImportModal : closeModal}
+                  onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
                   className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200"
                   aria-label="Close"
                 >
@@ -454,6 +512,63 @@ export function Settings() {
                         </Button>
                       </div>
                     )}
+                  </>
+                )}
+
+                {/* Backup destination */}
+                {activeModal === 'backup' && (
+                  <>
+                    <CardHeader>
+                      <div className="mb-2 flex items-center justify-center gap-2">
+                        <FolderOpen className="h-5 w-5 text-kavach-500" />
+                        <CardTitle className="text-center font-bold underline text-kavach-500">
+                          Backup destination
+                        </CardTitle>
+                      </div>
+                      <p className="text-center text-sm text-zinc-400">
+                        On each startup, Kavach copies your database to this folder. Leave blank to disable automatic backups.
+                      </p>
+                    </CardHeader>
+
+                    <div className="space-y-4">
+                      <Input
+                        id="backup-path"
+                        label="Folder path"
+                        type="text"
+                        placeholder="e.g. D:\Backups or /Volumes/USB"
+                        value={backupPath}
+                        onChange={(e) => { setBackupPath(e.target.value); setBackupStatus(null); setBackupError(null) }}
+                      />
+
+                      {backupStatus && <p className="text-xs text-green-400">{backupStatus}</p>}
+                      {backupError && <p className="text-xs text-red-400">{backupError}</p>}
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          loading={saveBackupMutation.isPending}
+                          onClick={() => saveBackupMutation.mutate()}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          loading={backupRunning}
+                          onClick={handleRunNow}
+                        >
+                          Back up now
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          loading={clearBackupMutation.isPending}
+                          onClick={() => clearBackupMutation.mutate()}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
                   </>
                 )}
 
