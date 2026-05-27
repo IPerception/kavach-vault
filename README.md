@@ -9,7 +9,8 @@ All data stays on your machine — no cloud, no external services except optiona
 
 **Option 1 — Native installer (recommended)**
 
-Build the self-contained app-image (bundles its own JRE; no Java required on the machine):
+Build the self-contained app-image (bundles its own JRE; no Java required on the machine).
+Bundled runtime: Eclipse Temurin 21.0.9 (OpenJDK, free for personal and commercial use).
 
 ```bash
 mvn clean install -P native-installer
