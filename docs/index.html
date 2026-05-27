@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kavach -- Local-First Password Manager</title>
+  <meta name="description" content="Kavach is a local-first personal password manager. All your credentials stay on your machine, encrypted with AES-256-GCM. No cloud, no accounts, no subscriptions." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kavach: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased">
+
+  <!-- Nav -->
+  <nav class="border-b border-zinc-800 px-6 py-4">
+    <div class="mx-auto flex max-w-5xl items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="h-6 w-6 text-kavach-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+        <span class="text-lg font-bold tracking-tight">Kavach</span>
+        <span class="ml-1 text-sm text-zinc-500">कवच</span>
+      </div>
+      <a href="https://github.com/IPerception/kavach-vault"
+         target="_blank"
+         class="flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 transition-colors">
+        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+        </svg>
+        View on GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="px-6 py-24 text-center">
+    <div class="mx-auto max-w-3xl">
+      <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-kavach-500/30 bg-kavach-500/10 px-3 py-1 text-xs text-kavach-400">
+        v1.0.0 now available
+      </div>
+      <h1 class="mb-6 text-5xl font-bold tracking-tight">
+        Your passwords.<br />
+        <span class="text-kavach-400">Your machine. Only.</span>
+      </h1>
+      <p class="mb-10 text-lg text-zinc-400">
+        Kavach is a local-first personal password manager. All credentials are encrypted
+        with AES-256-GCM and stored on your device. No cloud. No accounts. No subscriptions.
+        No one else can access your data -- not even us.
+      </p>
+      <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <a href="https://github.com/IPerception/kavach-vault/releases/download/v1.0.0/Kavach-v1.0.0-windows-x64.zip"
+           class="inline-flex items-center gap-2 rounded-lg bg-kavach-500 px-6 py-3 font-semibold text-zinc-950 hover:bg-kavach-400 transition-colors">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Download for Windows
+        </a>
+        <a href="https://github.com/IPerception/kavach-vault/releases"
+           target="_blank"
+           class="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-6 py-3 font-semibold text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition-colors">
+          All releases
+        </a>
+      </div>
+      <p class="mt-4 text-xs text-zinc-600">
+        Windows x64 &middot; No Java required &middot; Eclipse Temurin 21.0.9 bundled
+      </p>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="border-t border-zinc-800 px-6 py-20">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="mb-12 text-center text-2xl font-bold">Everything you need. Nothing you don't.</h2>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <div class="mb-3 text-kavach-400">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          </div>
+          <h3 class="mb-2 font-semibold">AES-256-GCM Encryption</h3>
+          <p class="text-sm text-zinc-400">Every password is encrypted with a unique key. Your master password is never stored -- it derives the encryption key at login.</p>
+        </div>
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <div class="mb-3 text-kavach-400">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3" />
+            </svg>
+          </div>
+          <h3 class="mb-2 font-semibold">TOTP-Protected Reveal</h3>
+          <p class="text-sm text-zinc-400">Reveal any saved password only after verifying with a 6-digit TOTP code from your authenticator app. Works with Google Authenticator and Authy.</p>
+        </div>
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <div class="mb-3 text-kavach-400">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+          </div>
+          <h3 class="mb-2 font-semibold">Truly Local</h3>
+          <p class="text-sm text-zinc-400">Data never leaves your machine. No sync, no cloud, no remote servers. Your vault is a single SQLite file at ~/.kavach/kavach.db.</p>
+        </div>
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <div class="mb-3 text-kavach-400">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+            </svg>
+          </div>
+          <h3 class="mb-2 font-semibold">Full Audit Log</h3>
+          <p class="text-sm text-zinc-400">Every login, credential view, and change is recorded in a tamper-evident audit log so you always know what happened in your vault.</p>
+        </div>
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <div class="mb-3 text-kavach-400">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+          </div>
+          <h3 class="mb-2 font-semibold">Password Health Report</h3>
+          <p class="text-sm text-zinc-400">Instantly see which passwords are weak, reused, or old so you know exactly where to focus your security hygiene.</p>
+        </div>
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+          <div class="mb-3 text-kavach-400">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+            </svg>
+          </div>
+          <h3 class="mb-2 font-semibold">Encrypted Export &amp; Import</h3>
+          <p class="text-sm text-zinc-400">Export your entire vault to an encrypted file for safekeeping or migration. Import it back on any machine running Kavach.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- How to install -->
+  <section class="border-t border-zinc-800 px-6 py-20">
+    <div class="mx-auto max-w-3xl">
+      <h2 class="mb-12 text-center text-2xl font-bold">Up and running in minutes</h2>
+      <div class="space-y-8">
+        <div class="flex gap-6">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/20 text-kavach-400 font-bold">1</div>
+          <div>
+            <h3 class="mb-1 font-semibold">Download and extract</h3>
+            <p class="text-sm text-zinc-400">Download <code class="rounded bg-zinc-800 px-1 py-0.5 text-kavach-400">Kavach-v1.0.0-windows-x64.zip</code> and extract it anywhere on your machine.</p>
+          </div>
+        </div>
+        <div class="flex gap-6">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/20 text-kavach-400 font-bold">2</div>
+          <div>
+            <h3 class="mb-1 font-semibold">Run Kavach.exe</h3>
+            <p class="text-sm text-zinc-400">Double-click <code class="rounded bg-zinc-800 px-1 py-0.5 text-kavach-400">Kavach.exe</code>. Your browser opens automatically to the setup wizard. Create your master password and scan the QR code with your authenticator app.</p>
+          </div>
+        </div>
+        <div class="flex gap-6">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/20 text-kavach-400 font-bold">3</div>
+          <div>
+            <h3 class="mb-1 font-semibold">Start adding credentials</h3>
+            <p class="text-sm text-zinc-400">Your vault is ready. Add credentials, reveal passwords with TOTP verification, and check your password health report.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security note -->
+  <section class="border-t border-zinc-800 px-6 py-20">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="mb-4 text-2xl font-bold">Built on open standards</h2>
+      <p class="mb-8 text-zinc-400">
+        Kavach uses PBKDF2WithHmacSHA256 (600,000 iterations) to derive your master key,
+        AES-256-GCM for all encryption, and RFC 6238 TOTP for credential reveal. The source
+        code is open for review on GitHub. No proprietary algorithms, no hidden backdoors.
+      </p>
+      <a href="https://github.com/IPerception/kavach-vault"
+         target="_blank"
+         class="inline-flex items-center gap-2 text-sm text-kavach-400 hover:text-kavach-300 transition-colors">
+        Read the source code
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-800 px-6 py-10 text-center text-sm text-zinc-600">
+    <p>Kavach is open source and free to use.</p>
+    <p class="mt-1">Bundled runtime: Eclipse Temurin 21.0.9 (OpenJDK &mdash; free for personal and commercial use).</p>
+    <p class="mt-3">
+      <a href="https://github.com/IPerception/kavach-vault" target="_blank" class="hover:text-zinc-400 transition-colors">GitHub</a>
+      &middot;
+      <a href="https://github.com/IPerception/kavach-vault/releases" target="_blank" class="hover:text-zinc-400 transition-colors">Releases</a>
+      &middot;
+      <a href="https://github.com/IPerception/kavach-vault/issues" target="_blank" class="hover:text-zinc-400 transition-colors">Issues</a>
+    </p>
+  </footer>
+
+</body>
+</html>
