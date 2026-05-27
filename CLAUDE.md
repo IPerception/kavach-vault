@@ -175,3 +175,31 @@ SMTP credentials and port config live in `app_config` (encrypted with master key
 ## Testing Rule
 
 Every phase ships with its tests. No deferred testing. Backend: JUnit 5 + Mockito + MockMvc. Frontend: Vitest + Testing Library.
+
+## Planned Features (in priority order)
+
+### 1. Distribution Landing Page
+A GitHub Pages site serving a single-page product overview with screenshots and a download button
+pointing to the latest GitHub release zip. Lives in a `docs/` folder or `gh-pages` branch.
+Built with the same React + Tailwind stack already in the project.
+
+### 2. Backup to User-Chosen Location
+A Settings option to choose a secondary backup destination (external drive, NAS, any local folder).
+On each startup the launcher copies `kavach.db` to that folder alongside the existing `~/.kavach/`
+auto-backup. Backend: new `backup.destination` entry in `app_config` (encrypted). Frontend: folder
+picker in Settings.
+
+### 3. Auto-Update Notification
+On startup, call `https://api.github.com/repos/IPerception/kavach-vault/releases/latest` and compare
+the tag name against the running version (`kavach.version` property). If a newer version exists,
+show a dismissible banner in the UI with a link to the releases page. No auto-install -- notification
+only. No backend change needed; purely a frontend hook on app load.
+
+### 4. macOS Build
+Run `mvn clean install -P native-installer` on a macOS machine. jpackage produces a `.dmg` by
+default. Attach to GitHub release as `Kavach-vX.Y.Z-macos.dmg`. Code signing via Apple Developer
+ID certificate is required to avoid Gatekeeper blocking.
+
+### 5. Linux Build
+Run `mvn clean install -P native-installer` on a Linux machine. jpackage produces a `.deb`
+(requires `dpkg-dev`) or `.rpm` (requires `rpm-build`). Attach to GitHub release accordingly.
