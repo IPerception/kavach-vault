@@ -87,6 +87,13 @@
             <version>1.7.1</version>
         </dependency>
 
+        <!-- TLS certificate generation for localhost HTTPS (bcprov pulled in transitively) -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
+        </dependency>
+
         <!-- MapStruct -->
         <dependency>
             <groupId>org.mapstruct</groupId>

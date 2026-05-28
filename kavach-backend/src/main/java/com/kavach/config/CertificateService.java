@@ -1,11 +1,25 @@
 package com.kavach.config;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 
 public class CertificateService {
 
@@ -37,36 +51,35 @@ public class CertificateService {
         }
     }
 
-    public static String readPassword(Path dataDir) throws IOException {
+    public static String readPassword(Path dataDir) throws Exception {
         return Files.readString(dataDir.resolve(PASSWORD_FILENAME)).strip();
     }
 
-    private static void generate(Path keystorePath, String password)
-            throws IOException, InterruptedException {
-        String keytoolName = System.getProperty("os.name", "").toLowerCase().contains("win")
-                ? "keytool.exe" : "keytool";
-        String keytool = Path.of(System.getProperty("java.home"), "bin", keytoolName).toString();
+    private static void generate(Path keystorePath, String password) throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048, new SecureRandom());
+        KeyPair keyPair = keyGen.generateKeyPair();
 
-        ProcessBuilder pb = new ProcessBuilder(
-                keytool,
-                "-genkeypair",
-                "-alias",     KEY_ALIAS,
-                "-keyalg",    "RSA",
-                "-keysize",   "2048",
-                "-validity",  "3650",
-                "-dname",     "CN=localhost, O=Kavach",
-                "-keystore",  keystorePath.toString(),
-                "-storetype", "PKCS12",
-                "-storepass", password,
-                "-keypass",   password,
-                "-noprompt"
-        );
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
-        int exit = process.waitFor();
-        if (exit != 0) {
-            String output = new String(process.getInputStream().readAllBytes()).strip();
-            throw new IOException("keytool exited with code " + exit + ": " + output);
+        X500Name subject = new X500Name("CN=localhost,O=Kavach");
+        BigInteger serial = new BigInteger(64, new SecureRandom());
+        Date notBefore = new Date();
+        Date notAfter = new Date(notBefore.getTime() + 3650L * 24 * 60 * 60 * 1000);
+
+        X509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                subject, serial, notBefore, notAfter, subject, keyPair.getPublic());
+
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
+                .build(keyPair.getPrivate());
+
+        X509Certificate cert = new JcaX509CertificateConverter()
+                .getCertificate(certBuilder.build(signer));
+
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(null, null);
+        ks.setKeyEntry(KEY_ALIAS, keyPair.getPrivate(), password.toCharArray(),
+                new Certificate[]{cert});
+        try (OutputStream out = Files.newOutputStream(keystorePath)) {
+            ks.store(out, password.toCharArray());
         }
     }
 }
