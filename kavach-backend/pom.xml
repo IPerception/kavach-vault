@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.kavach</groupId>
         <artifactId>kavach</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.1.0</version>
     </parent>
 
     <artifactId>kavach-backend</artifactId>
@@ -197,9 +197,9 @@
               mvn clean install -P native-installer
 
             Output: kavach-backend/target/installer/
-              Windows  : Kavach-1.0.0.exe  (requires WiX 3.x for .msi; app-image is default)
-              macOS    : Kavach-1.0.0.dmg
-              Linux    : kavach_1.0.0_amd64.deb
+              Windows  : Kavach-1.1.0.exe  (requires WiX 3.x for .msi; app-image is default)
+              macOS    : Kavach-1.1.0.dmg
+              Linux    : kavach_1.1.0_amd64.deb
 
             To produce a specific format add: -Djpackage.type=msi|dmg|deb|rpm|exe|pkg|app-image
             The default is the platform-native format; app-image works on all platforms
@@ -262,7 +262,7 @@
                                         <argument>--name</argument>
                                         <argument>Kavach</argument>
                                         <argument>--app-version</argument>
-                                        <argument>1.0.0</argument>
+                                        <argument>1.1.0</argument>
                                         <argument>--description</argument>
                                         <argument>Local-first personal password manager</argument>
                                         <argument>--vendor</argument>
