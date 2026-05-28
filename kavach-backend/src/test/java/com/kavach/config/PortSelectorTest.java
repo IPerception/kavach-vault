@@ -34,7 +34,7 @@ class PortSelectorTest {
         verify(factory).setPort(8080);
         verify(factory).setAddress(InetAddress.getLoopbackAddress());
         assertThat(portFile).exists();
-        assertThat(portFile).hasContent("8080");
+        assertThat(portFile).hasContent("http://127.0.0.1:8080");
     }
 
     @Test
@@ -47,7 +47,7 @@ class PortSelectorTest {
             selector.customize(factory);
 
             verify(factory).setPort(8090);
-            assertThat(portFile).hasContent("8090");
+            assertThat(portFile).hasContent("http://127.0.0.1:8090");
         }
     }
 
@@ -65,12 +65,12 @@ class PortSelectorTest {
     }
 
     @Test
-    void portFileContentIsPlainPortNumber() {
+    void portFileContainsFullUrl() {
         ConfigurableWebServerFactory factory = mock(ConfigurableWebServerFactory.class);
         selector.customize(factory);
 
         assertThat(portFile).exists();
-        assertThat(portFile).hasContent("8080");
+        assertThat(portFile).hasContent("http://127.0.0.1:8080");
     }
 
     private ServerSocket occupyLoopback(int port) throws IOException {
