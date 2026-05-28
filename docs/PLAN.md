@@ -1,6 +1,18 @@
-# Kavach — Implementation Plan
+# Kavach -- Implementation Plan
 
-> **Kavach** (कवच) — Sanskrit for *shield* or *armour*. Your credentials, protected.
+> **Kavach** (kavach) -- Sanskrit for *shield* or *armour*. Your credentials, protected.
+
+## Current Status
+
+**v1.0.0** released 2026-05-26 -- All phases 1-11 complete and shipped.
+
+**v1.1.0** released 2026-05-27 -- Post-release features added:
+- Backup to user-chosen location (BackupService + BackupController + Settings modal; destination stored in `~/.kavach/backup-destination.txt`)
+- Localhost HTTPS: self-signed PKCS12 certificate generated on first launch using Bouncy Castle (`bcpkix-jdk18on`); keystore at `~/.kavach/kavach.p12`; timestamp-based password stored in `~/.kavach/tls.key`; SSL system properties cleared after Tomcat starts (SslPropertyCleaner)
+
+**Next planned:** Auto-update notification (check GitHub releases API on startup, show dismissible banner).
+
+---
 
 ## Overview
 
@@ -284,7 +296,7 @@ interface KavachStore {
 - [ ] Account lockout after 5 failed login attempts (15-min cooldown) — verify implementation from Phase 4
 - [ ] CSRF protection (Spring Security — `SameSite=Strict` cookie makes CSRF tokens optional but add them anyway)
 - [ ] Security response headers (X-Frame-Options: DENY, X-Content-Type-Options: nosniff, CSP: `default-src 'self'`)
-- [ ] HTTPS on localhost via self-signed cert — generate with `keytool`, configure in Spring Boot
+- [x] HTTPS on localhost via self-signed cert -- generated in-process with Bouncy Castle (keytool not available in jpackage runtime); cert stored in `~/.kavach/kavach.p12`
 - [ ] OWASP Dependency-Check Maven plugin — fail build on CVSS ≥ 7
 - [ ] Validate and sanitize all user inputs (Bean Validation backend + Zod frontend)
 - [ ] Verify `SessionKeyStore.clear()` is called on every exit path (logout, lock, shutdown hook)
