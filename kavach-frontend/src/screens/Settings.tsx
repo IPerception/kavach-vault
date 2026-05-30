@@ -4,11 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { SmartphoneNfc, KeyRound, Palette, ChevronRight, X, Info, Download, Upload, FolderOpen } from 'lucide-react'
+import { SmartphoneNfc, KeyRound, Palette, ChevronRight, X, Info, Download, Upload, FolderOpen, Clock } from 'lucide-react'
 import { changePassword, setupTotp, confirmTotp } from '../api/auth'
 import { exportVault, importVault } from '../api/credentials'
 import { getBackupDestination, setBackupDestination, clearBackupDestination, runBackupNow } from '../api/backup'
 import { useKavachStore, type KavachTheme } from '../store/useKavachStore'
+import { EXPIRY_DAYS_KEY, EXPIRY_WARNING_KEY, DEFAULT_EXPIRY_DAYS, DEFAULT_WARNING_DAYS } from '../hooks/useExpiryCheck'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
@@ -38,7 +39,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 type TotpResetStep = 'idle' | 'scanning' | 'done'
-type ActiveModal = 'password' | 'totp' | 'theme' | 'import' | 'backup' | null
+type ActiveModal = 'password' | 'totp' | 'theme' | 'import' | 'backup' | 'expiry' | null
 
 const THEMES: { id: KavachTheme; label: string; color: string }[] = [
   { id: 'amber',   label: 'Amber',   color: '#f59e0b' },
@@ -209,6 +210,20 @@ export function Settings() {
     setBackupError(null)
   }
 
+  // --- password expiry ---
+  const [expiryDays, setExpiryDaysState] = useState(
+    () => parseInt(localStorage.getItem(EXPIRY_DAYS_KEY) ?? String(DEFAULT_EXPIRY_DAYS))
+  )
+  const [warningDays, setWarningDaysState] = useState(
+    () => parseInt(localStorage.getItem(EXPIRY_WARNING_KEY) ?? String(DEFAULT_WARNING_DAYS))
+  )
+
+  function saveExpiry() {
+    localStorage.setItem(EXPIRY_DAYS_KEY, String(expiryDays))
+    localStorage.setItem(EXPIRY_WARNING_KEY, String(warningDays))
+    setActiveModal(null)
+  }
+
   const settingsItems = [
     {
       key: 'password' as const,
@@ -251,6 +266,13 @@ export function Settings() {
       iconBg: 'bg-kavach-500/10',
       title: 'Backup destination',
       description: 'Copy the database to a folder on each startup',
+    },
+    {
+      key: 'expiry' as const,
+      icon: <Clock className="h-5 w-5 text-kavach-500" />,
+      iconBg: 'bg-kavach-500/10',
+      title: 'Password expiry',
+      description: `Remind when passwords are older than ${expiryDays} days`,
     },
   ]
 
@@ -567,6 +589,61 @@ export function Settings() {
                         >
                           Clear
                         </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Password expiry */}
+                {activeModal === 'expiry' && (
+                  <>
+                    <CardHeader>
+                      <div className="mb-2 flex items-center justify-center gap-2">
+                        <Clock className="h-5 w-5 text-kavach-500" />
+                        <CardTitle className="text-center font-bold underline text-kavach-500">
+                          Password expiry
+                        </CardTitle>
+                      </div>
+                      <p className="text-center text-sm text-zinc-400">
+                        Kavach will remind you when passwords have not been updated within the expiry period.
+                      </p>
+                    </CardHeader>
+
+                    <div className="space-y-5">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          Expiry period
+                        </label>
+                        <select
+                          value={expiryDays}
+                          onChange={(e) => setExpiryDaysState(Number(e.target.value))}
+                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                          <option value={60}>60 days</option>
+                          <option value={90}>90 days (default)</option>
+                          <option value={180}>180 days</option>
+                          <option value={365}>365 days</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          Warn me before expiry
+                        </label>
+                        <select
+                          value={warningDays}
+                          onChange={(e) => setWarningDaysState(Number(e.target.value))}
+                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                          <option value={7}>7 days before</option>
+                          <option value={14}>14 days before (default)</option>
+                          <option value={30}>30 days before</option>
+                        </select>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
+                        <Button type="button" onClick={saveExpiry}>Save</Button>
                       </div>
                     </div>
                   </>

@@ -7,8 +7,9 @@ import { getHealthReport, checkBreaches } from '../api/credentials'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import type { BreachResult, CredentialHealth } from '../api/types'
+import { getExpiryDays } from '../hooks/useExpiryCheck'
 
-const STALE_DAYS = 90
+const STALE_DAYS = getExpiryDays()
 
 function daysSince(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)

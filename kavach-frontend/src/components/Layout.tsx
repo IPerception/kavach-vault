@@ -4,6 +4,7 @@ import { useKavachStore } from '../store/useKavachStore'
 import { useInactivityWatcher } from '../hooks/useInactivityWatcher'
 import { useUpdateCheck } from '../hooks/useUpdateCheck'
 import { UpdateBanner } from './UpdateBanner'
+import { ExpiryBanner } from './ExpiryBanner'
 import { Button } from './ui/Button'
 import { clsx } from 'clsx'
 
@@ -88,6 +89,7 @@ export function Layout() {
         </nav>
 
         {updateVersion && <UpdateBanner version={updateVersion} />}
+        <ExpiryBanner />
 
         <main className="flex-1 px-6 py-6">
           <Outlet />
