@@ -8,6 +8,7 @@ import com.kavach.domain.Credential;
 import com.kavach.domain.VaultUser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kavach.dto.BreachCheckResult;
 import com.kavach.dto.CredentialHealthDto;
 import com.kavach.dto.CredentialSummaryDto;
 import com.kavach.dto.ExportResponse;
@@ -53,6 +54,7 @@ public class CredentialService {
     private final CredentialMapper credentialMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+    private final HibpService hibpService;
 
     public CredentialService(CredentialRepository credentialRepository,
                              VaultUserRepository userRepository,
@@ -60,7 +62,8 @@ public class CredentialService {
                              SessionKeyStore sessionKeyStore,
                              CredentialMapper credentialMapper,
                              ApplicationEventPublisher eventPublisher,
-                             ObjectMapper objectMapper) {
+                             ObjectMapper objectMapper,
+                             HibpService hibpService) {
         this.credentialRepository = credentialRepository;
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
@@ -68,6 +71,7 @@ public class CredentialService {
         this.credentialMapper = credentialMapper;
         this.eventPublisher = eventPublisher;
         this.objectMapper = objectMapper;
+        this.hibpService = hibpService;
     }
 
     @Transactional
@@ -328,6 +332,33 @@ public class CredentialService {
                     .build());
         }
         return report;
+    }
+
+    public List<BreachCheckResult> checkBreaches(String username) {
+        VaultUser user = loadUser(username);
+        SecretKey masterKey = sessionKeyStore.getKey();
+        List<Credential> credentials = credentialRepository.findAllByUser(user).stream()
+                .filter(c -> !"NOTE".equals(c.getCredentialType()))
+                .toList();
+
+        List<BreachCheckResult> results = new ArrayList<>();
+        for (Credential c : credentials) {
+            byte[] dek = encryptionService.decrypt(c.getDekEncrypted(), masterKey);
+            SecretKey dekKey = encryptionService.bytesToKey(dek);
+            byte[] pw = encryptionService.decrypt(c.getEncryptedPassword(), dekKey);
+            Arrays.fill(dek, (byte) 0);
+
+            int count = hibpService.countBreaches(pw);
+            Arrays.fill(pw, (byte) 0);
+
+            results.add(BreachCheckResult.builder()
+                    .id(c.getId())
+                    .purpose(c.getPurpose())
+                    .breached(count > 0)
+                    .count(count)
+                    .build());
+        }
+        return results;
     }
 
     private int scorePassword(byte[] pw) {

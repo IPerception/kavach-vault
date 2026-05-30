@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
+import * as Dialog from '@radix-ui/react-dialog'
+import { RefreshCw } from 'lucide-react'
 import { listCredentials, updateCredential } from '../api/credentials'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -26,6 +28,7 @@ export function EditCredential() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [tags, setTags] = useState<string[]>([])
+  const [pendingPassword, setPendingPassword] = useState<string | null>(null)
 
   const { data: credentials = [] } = useQuery({
     queryKey: ['credentials'],
@@ -111,13 +114,48 @@ export function EditCredential() {
           />
           {password && <PasswordStrengthMeter password={password} />}
         </div>
-        <PasswordGenerator
-          onGenerated={(pw) => {
-            if (window.confirm('Replace the current password with the generated one?')) {
-              setValue('password', pw, { shouldValidate: true })
-            }
-          }}
-        />
+        <PasswordGenerator onGenerated={(pw) => setPendingPassword(pw)} />
+
+        <Dialog.Root open={pendingPassword !== null} onOpenChange={(open) => { if (!open) setPendingPassword(null) }}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/10">
+                  <RefreshCw className="h-5 w-5 text-kavach-500" />
+                </div>
+                <div>
+                  <Dialog.Title className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                    Replace password?
+                  </Dialog.Title>
+                  <Dialog.Description className="text-sm text-zinc-600 dark:text-zinc-400">
+                    {credential.purpose}
+                  </Dialog.Description>
+                </div>
+              </div>
+              <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+                The generated password will replace the current password field:
+              </p>
+              <p className="mb-5 break-all rounded bg-zinc-100 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+                {pendingPassword}
+              </p>
+              <div className="flex justify-end gap-3">
+                <Dialog.Close asChild>
+                  <Button variant="ghost" size="sm">Cancel</Button>
+                </Dialog.Close>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setValue('password', pendingPassword ?? '', { shouldValidate: true })
+                    setPendingPassword(null)
+                  }}
+                >
+                  Replace
+                </Button>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
         <Input
           id="url"
           label="URL (optional)"

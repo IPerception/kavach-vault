@@ -48,6 +48,7 @@ class CredentialServiceTest {
     @Mock SessionKeyStore sessionKeyStore;
     @Mock CredentialMapper credentialMapper;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock HibpService hibpService;
 
     private CredentialService credentialService;
     private VaultUser testUser;
@@ -57,7 +58,7 @@ class CredentialServiceTest {
     void setUp() {
         credentialService = new CredentialService(
                 credentialRepository, userRepository, encryptionService,
-                sessionKeyStore, credentialMapper, eventPublisher, new ObjectMapper());
+                sessionKeyStore, credentialMapper, eventPublisher, new ObjectMapper(), hibpService);
         testUser = VaultUser.builder()
                 .id(1L).username("alice").email("alice@example.com")
                 .masterPasswordHash("$2a$hashed").pbkdf2Salt(new byte[16])

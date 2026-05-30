@@ -1,5 +1,5 @@
 import client from './client'
-import type { CredentialHealth, CredentialSummary, ImportResult, RevealResponse, VaultExport } from './types'
+import type { BreachResult, CredentialHealth, CredentialSummary, ImportResult, RevealResponse, VaultExport } from './types'
 
 interface CreateCredentialBody {
   purpose: string
@@ -46,3 +46,6 @@ export const createNote = (body: { title: string; body: string; tags?: string[] 
 
 export const toggleFavourite = (id: number) =>
   client.put<CredentialSummary>(`/credentials/${id}/favourite`).then((r) => r.data)
+
+export const checkBreaches = () =>
+  client.get<BreachResult[]>('/credentials/breach-check').then((r) => r.data)

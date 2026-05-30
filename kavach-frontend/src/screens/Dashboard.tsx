@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import * as Dialog from '@radix-ui/react-dialog'
 import { PlusCircle, Pencil, Trash2, ShieldCheck, KeyRound, Globe, ShieldOff, SearchX, ChevronLeft, ChevronRight, Tag, X, Star, StickyNote, NotebookPen } from 'lucide-react'
 import { listCredentials, deleteCredential, toggleFavourite } from '../api/credentials'
 import { CredentialSearch } from '../components/CredentialSearch'
@@ -29,6 +30,7 @@ export function Dashboard() {
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [showStarredOnly, setShowStarredOnly] = useState(false)
   const [page, setPage] = useState(0)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; purpose: string } | null>(null)
   const PAGE_SIZE = 25
   const qc = useQueryClient()
 
@@ -287,11 +289,7 @@ export function Dashboard() {
                     size="sm"
                     variant="ghost"
                     aria-label="Delete"
-                    onClick={() => {
-                      if (window.confirm(`Delete "${cred.purpose}"?`)) {
-                        deleteMutation.mutate(cred.id)
-                      }
-                    }}
+                    onClick={() => setDeleteTarget({ id: cred.id, purpose: cred.purpose })}
                   >
                     <Trash2 className="h-3.5 w-3.5 text-red-400" />
                   </Button>
@@ -301,6 +299,45 @@ export function Dashboard() {
           )
         })}
       </div>
+
+      <Dialog.Root open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <div>
+                <Dialog.Title className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  Delete credential?
+                </Dialog.Title>
+                <Dialog.Description className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {deleteTarget?.purpose}
+                </Dialog.Description>
+              </div>
+            </div>
+            <p className="mb-5 text-sm text-zinc-600 dark:text-zinc-400">
+              This will permanently remove the credential and its password. This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Dialog.Close asChild>
+                <Button variant="ghost" size="sm">Cancel</Button>
+              </Dialog.Close>
+              <Button
+                size="sm"
+                className="bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500"
+                onClick={() => {
+                  if (deleteTarget) deleteMutation.mutate(deleteTarget.id)
+                  setDeleteTarget(null)
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">

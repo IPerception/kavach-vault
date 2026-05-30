@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getAuditLog } from '../api/auditLog'
-import { Card, CardHeader, CardTitle } from '../components/ui/Card'
+import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import type { BadgeVariant } from '../api/types'
@@ -28,11 +28,12 @@ export function AuditLog() {
   const totalPages = data?.totalPages ?? 1
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
+        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Audit Log</h1>
+      </div>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-kavach-500">Audit log</CardTitle>
-        </CardHeader>
 
         {entries.length === 0 && (
           <p className="py-8 text-center text-sm text-zinc-500">No audit entries yet.</p>

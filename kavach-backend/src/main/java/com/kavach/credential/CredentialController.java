@@ -1,5 +1,6 @@
 package com.kavach.credential;
 
+import com.kavach.dto.BreachCheckResult;
 import com.kavach.dto.CredentialHealthDto;
 import com.kavach.dto.CredentialSummaryDto;
 import com.kavach.dto.ExportResponse;
@@ -57,6 +58,12 @@ public class CredentialController {
     public ResponseEntity<List<CredentialHealthDto>> health(
             @AuthenticationPrincipal String username) {
         return ResponseEntity.ok(credentialService.healthReport(username));
+    }
+
+    @GetMapping("/breach-check")
+    public ResponseEntity<List<BreachCheckResult>> breachCheck(
+            @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(credentialService.checkBreaches(username));
     }
 
     @GetMapping("/export")

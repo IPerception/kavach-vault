@@ -60,6 +60,13 @@ export interface ImportResult {
   skipped: number
 }
 
+export interface BreachResult {
+  id: number
+  purpose: string
+  breached: boolean
+  count: number
+}
+
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger'
 
 export interface TotpSetupData {

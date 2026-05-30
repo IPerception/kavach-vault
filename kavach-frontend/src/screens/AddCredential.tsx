@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { createCredential } from '../api/credentials'
-import { Card, CardHeader, CardTitle } from '../components/ui/Card'
+import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
@@ -54,10 +54,12 @@ export function AddCredential() {
   })
 
   return (
-    <Card className="mx-auto max-w-lg">
-      <CardHeader>
-        <CardTitle className="text-kavach-500">Add credential</CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
+        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Add Credential</h1>
+      </div>
+      <Card className="mx-auto max-w-lg">
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
         <Input
@@ -122,5 +124,6 @@ export function AddCredential() {
         </div>
       </form>
     </Card>
+    </div>
   )
 }

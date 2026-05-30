@@ -1,5 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useRef } from 'react'
+import { ShieldCheck, FileText } from 'lucide-react'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
 import { ClipboardCopy } from './ClipboardCopy'
@@ -31,13 +32,24 @@ export function OtpModal({ credentialId, purpose, credentialType = 'PASSWORD', c
           onEscapeKeyDown={reset}
           onInteractOutside={reset}
         >
-          <Dialog.Title className="mb-1 text-base font-semibold text-kavach-500">
-            {isNote ? 'Reveal note' : 'Reveal password'}
-          </Dialog.Title>
-          <Dialog.Description className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-            Enter the 6-digit code from your authenticator app to reveal the {isNote ? 'note' : 'password'} for{' '}
-            <span className="font-medium text-zinc-200">{purpose}</span>.
-          </Dialog.Description>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/10">
+              {isNote
+                ? <FileText className="h-5 w-5 text-kavach-500" />
+                : <ShieldCheck className="h-5 w-5 text-kavach-500" />}
+            </div>
+            <div>
+              <Dialog.Title className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                {isNote ? 'Reveal note' : 'Reveal password'}
+              </Dialog.Title>
+              <Dialog.Description className="text-sm text-zinc-600 dark:text-zinc-400">
+                {purpose}
+              </Dialog.Description>
+            </div>
+          </div>
+          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+            Enter the 6-digit code from your authenticator app.
+          </p>
 
           {(state === 'awaiting-code' || state === 'revealing') && (
             <form
