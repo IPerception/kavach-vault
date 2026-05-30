@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { DoorOpen, LockKeyhole, List, PlusCircle, Settings, ScrollText, ShieldAlert } from 'lucide-react'
+import { DoorOpen, LockKeyhole, List, PlusCircle, Settings, ScrollText, ShieldAlert, Sun, Moon } from 'lucide-react'
 import { useKavachStore } from '../store/useKavachStore'
 import { useInactivityWatcher } from '../hooks/useInactivityWatcher'
 import { useUpdateCheck } from '../hooks/useUpdateCheck'
@@ -16,14 +16,14 @@ const navItems = [
 ]
 
 export function Layout() {
-  const { lock, doLogout } = useKavachStore()
+  const { lock, doLogout, colorMode, setColorMode } = useKavachStore()
   useInactivityWatcher()
   const updateVersion = useUpdateCheck()
 
   return (
     <div className="flex min-h-screen flex-col p-5">
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900 text-zinc-100 shadow-2xl shadow-black/70">
-        <header className="border-b border-zinc-800 border-t-2 border-t-kavach-500 bg-zinc-900">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col overflow-hidden rounded-xl border border-zinc-300/60 bg-white text-zinc-900 shadow-2xl shadow-black/20 dark:border-zinc-700/50 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/70">
+        <header className="border-b border-zinc-200 border-t-2 border-t-kavach-500 bg-white dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center justify-between px-4 py-3">
             <Link to="/dashboard" className="flex items-center gap-2">
               <img src="/Kavach-Logo.png" alt="Kavach" className="h-7 w-7 object-contain" />
@@ -32,6 +32,19 @@ export function Layout() {
               </span>
             </Link>
             <div className="flex items-center gap-1">
+              <div className="group relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Toggle light/dark mode"
+                  onClick={() => setColorMode(colorMode === 'dark' ? 'light' : 'dark')}
+                >
+                  {colorMode === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
+                  {colorMode === 'dark' ? 'Light mode' : 'Dark mode'}
+                </div>
+              </div>
               <div className="group relative">
                 <Button variant="ghost" size="sm" onClick={lock}>
                   <LockKeyhole className="h-4 w-4" />
@@ -52,7 +65,7 @@ export function Layout() {
           </div>
         </header>
 
-        <nav className="border-b border-zinc-800 bg-zinc-900">
+        <nav className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex gap-1 px-4">
             {navItems.map(({ to, icon: Icon, label }) => (
               <NavLink

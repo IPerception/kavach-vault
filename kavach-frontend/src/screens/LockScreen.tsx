@@ -47,7 +47,7 @@ export function LockScreen() {
       <Card className="w-full max-w-3xl overflow-hidden !p-0">
         <div className="flex h-[360px]">
           {/* Left column - logo panel */}
-          <div className="relative w-2/4 bg-zinc-800">
+          <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
             <img
               src="/Kavach-Logo.png"
               alt="Kavach"

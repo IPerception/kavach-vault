@@ -27,7 +27,7 @@ function issueTags(c: CredentialHealth) {
   if (c.duplicate)
     tags.push({ label: 'Duplicate', className: 'text-orange-400 bg-orange-500/10' })
   if (daysSince(c.updatedAt) >= STALE_DAYS)
-    tags.push({ label: 'Stale', className: 'text-zinc-400 bg-zinc-700/50' })
+    tags.push({ label: 'Stale', className: 'text-zinc-600 bg-zinc-200/80 dark:text-zinc-400 dark:bg-zinc-700/50' })
   return tags
 }
 
@@ -78,7 +78,7 @@ export function HealthReport() {
               {totalIssues} credential{totalIssues !== 1 ? 's' : ''} need attention
             </CardTitle>
           </CardHeader>
-          <ul className="divide-y divide-zinc-800">
+          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
             {items
               .filter((c) => issueTags(c).length > 0)
               .map((c) => (
@@ -106,12 +106,12 @@ function Chip({
   return (
     <div
       className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 ${
-        highlight ? 'border-kavach-500/30 bg-kavach-950/30' : 'border-zinc-800 bg-zinc-900'
+        highlight ? 'border-kavach-500/30 bg-kavach-950/30' : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'
       }`}
     >
       {icon}
       <div>
-        <p className="text-sm font-semibold text-zinc-100">{value}</p>
+        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{value}</p>
         <p className="text-xs text-zinc-500">{label}</p>
       </div>
     </div>
@@ -123,7 +123,7 @@ function CredentialRow({ item }: { item: CredentialHealth }) {
   return (
     <li className="flex items-center justify-between py-3 px-1">
       <div className="flex min-w-0 flex-col gap-1">
-        <p className="text-sm font-medium text-zinc-100">{item.purpose}</p>
+        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.purpose}</p>
         <div className="flex flex-wrap gap-1.5">
           <span
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${

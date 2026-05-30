@@ -258,11 +258,11 @@ export function Settings() {
     <>
       {/* Settings list */}
       <Card className="max-w-lg !p-0">
-        <ul className="divide-y divide-zinc-800">
+        <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
           {settingsItems.map((item) => (
             <li key={item.key}>
               <button
-                className="flex w-full items-center gap-4 px-6 py-5 transition-colors hover:bg-zinc-800/60"
+                className="flex w-full items-center gap-4 px-6 py-5 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60"
                 onClick={() => item.key === 'export' ? handleExport() : item.key === 'backup' ? openBackupModal() : setActiveModal(item.key)}
                 disabled={item.key === 'export' && exporting}
               >
@@ -270,8 +270,8 @@ export function Settings() {
                   {item.icon}
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-zinc-100">{item.title}</p>
-                  <p className="text-xs text-zinc-400">{item.description}</p>
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</p>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">{item.description}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-zinc-500" />
               </button>
@@ -305,7 +305,7 @@ export function Settings() {
           >
             <div className="flex h-[540px]">
               {/* Left column - logo panel */}
-              <div className="relative w-2/4 bg-zinc-800">
+              <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
                 <img
                   src="/Kavach-Logo.png"
                   alt="Kavach"
@@ -317,7 +317,7 @@ export function Settings() {
               <div className="relative flex flex-1 flex-col justify-center overflow-y-auto p-8">
                 <button
                   onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
-                  className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200"
+                  className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -415,7 +415,7 @@ export function Settings() {
                         </div>
                         <details className="text-xs text-zinc-500">
                           <summary className="cursor-pointer select-none">Can't scan? Enter manually</summary>
-                          <div className="mt-2 rounded bg-zinc-800 px-3 py-2">
+                          <div className="mt-2 rounded bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
                             <div className="mb-1 flex items-center gap-1 text-zinc-500">
                               <span>Secret key</span>
                               <div className="group relative">
@@ -426,7 +426,7 @@ export function Settings() {
                                 </div>
                               </div>
                             </div>
-                            <p className="break-all font-mono text-zinc-300">{totpData.secret}</p>
+                            <p className="break-all font-mono text-zinc-700 dark:text-zinc-300">{totpData.secret}</p>
                           </div>
                         </details>
                         <form
@@ -589,7 +589,7 @@ export function Settings() {
                         <button
                           key={t.id}
                           onClick={() => { setTheme(t.id); closeModal() }}
-                          className="flex flex-col items-center gap-2 rounded-lg p-3 transition-colors hover:bg-zinc-800"
+                          className="flex flex-col items-center gap-2 rounded-lg p-3 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
                         >
                           <span
                             className="flex h-10 w-10 items-center justify-center rounded-full"
@@ -601,7 +601,7 @@ export function Settings() {
                               </svg>
                             )}
                           </span>
-                          <span className="text-xs text-zinc-300">{t.label}</span>
+                          <span className="text-xs text-zinc-600 dark:text-zinc-300">{t.label}</span>
                         </button>
                       ))}
                     </div>

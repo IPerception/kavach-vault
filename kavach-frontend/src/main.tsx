@@ -5,8 +5,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import { App } from './App'
 
-// Apply persisted theme before first render to avoid a flash
+// Apply persisted theme and color mode before first render to avoid a flash
 document.documentElement.dataset.theme = localStorage.getItem('kavach_theme') ?? 'amber'
+if ((localStorage.getItem('kavach_color_mode') ?? 'dark') === 'dark') {
+  document.documentElement.classList.add('dark')
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

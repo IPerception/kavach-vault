@@ -88,7 +88,7 @@ export function SetupWizard() {
       <Card className="w-full max-w-3xl overflow-hidden !p-0">
         <div className="flex h-[540px]">
           {/* Left column - logo panel */}
-          <div className="relative w-2/4 bg-zinc-800">
+          <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
             <img
               src="/Kavach-Logo.png"
               alt="Kavach"
@@ -178,7 +178,7 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
       <Card className="w-full max-w-3xl overflow-hidden !p-0">
         <div className="flex h-[480px]">
           {/* Left column - logo panel */}
-          <div className="relative w-2/4 bg-zinc-800">
+          <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
             <img
               src="/Kavach-Logo.png"
               alt="Kavach"
@@ -190,7 +190,7 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
           <div className="relative flex flex-1 flex-col justify-center overflow-y-auto p-8">
             <button
               onClick={onReset}
-              className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200"
+              className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
               aria-label="Refresh QR code"
             >
               <RefreshCw className="h-4 w-4" />
@@ -213,7 +213,7 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
 
               <details className="w-full text-xs text-zinc-500">
                 <summary className="cursor-pointer select-none">Can't scan? Enter manually</summary>
-                <div className="mt-2 rounded bg-zinc-800 px-3 py-2">
+                <div className="mt-2 rounded bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
                   <div className="mb-1 flex items-center gap-1 text-zinc-500">
                     <span>Secret key</span>
                     <div className="group relative">
@@ -223,7 +223,7 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
                       </div>
                     </div>
                   </div>
-                  <p className="break-all font-mono text-zinc-300">{data.secret}</p>
+                  <p className="break-all font-mono text-zinc-700 dark:text-zinc-300">{data.secret}</p>
                 </div>
               </details>
 

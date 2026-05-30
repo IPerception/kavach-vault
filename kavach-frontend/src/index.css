@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
+}
+:root.dark {
   color-scheme: dark;
 }
 
@@ -21,9 +24,13 @@
 }
 
 body {
+  background-color: #f4f4f5;
+  background-image: radial-gradient(rgb(212 212 216 / 0.6) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+.dark body {
   background-color: #09090b;
   background-image: radial-gradient(rgb(63 63 70 / 0.45) 1px, transparent 1px);
-  background-size: 4px 4px;
 }
 
 /* Amber (default) */

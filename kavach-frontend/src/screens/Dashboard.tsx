@@ -90,21 +90,21 @@ export function Dashboard() {
 
         {/* Stats chips */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
             <KeyRound className="h-3.5 w-3.5 text-kavach-500" />
-            <span className="text-sm font-medium text-zinc-100">{credentials.length}</span>
+            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{credentials.length}</span>
             <span className="text-xs text-zinc-500">credentials</span>
           </div>
           {withUrls > 0 && (
-            <div className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+            <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
               <Globe className="h-3.5 w-3.5 text-kavach-500" />
-              <span className="text-sm font-medium text-zinc-100">{withUrls}</span>
+              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{withUrls}</span>
               <span className="text-xs text-zinc-500">with URL</span>
             </div>
           )}
-          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
             <ShieldCheck className="h-3.5 w-3.5 text-green-400" />
-            <span className="text-xs text-zinc-400">Vault secured</span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">Vault secured</span>
           </div>
         </div>
       </div>
@@ -136,7 +136,7 @@ export function Dashboard() {
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
                 showStarredOnly
                   ? 'bg-amber-500 text-white'
-                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
               }`}
             >
               <Star className={`h-3 w-3 ${showStarredOnly ? 'fill-white' : ''}`} />
@@ -144,7 +144,7 @@ export function Dashboard() {
             </button>
           )}
           {anyStarred && allTags.length > 0 && (
-            <span className="h-4 border-l border-zinc-700" />
+            <span className="h-4 border-l border-zinc-300 dark:border-zinc-700" />
           )}
           {allTags.length > 0 && (
             <>
@@ -157,7 +157,7 @@ export function Dashboard() {
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
                     activeTag === tag
                       ? 'bg-kavach-500 text-white'
-                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
                   }`}
                 >
                   {tag}
@@ -173,10 +173,10 @@ export function Dashboard() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           {search ? (
             <>
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                 <SearchX className="h-7 w-7 text-zinc-500" />
               </div>
-              <p className="text-base font-semibold text-zinc-300">No results found</p>
+              <p className="text-base font-semibold text-zinc-700 dark:text-zinc-300">No results found</p>
               <p className="mt-1 text-sm text-zinc-500">
                 No credentials match <span className="text-zinc-400">"{search}"</span>. Try a different search.
               </p>
@@ -186,7 +186,7 @@ export function Dashboard() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-kavach-500/10">
                 <ShieldOff className="h-7 w-7 text-kavach-500" />
               </div>
-              <p className="text-base font-semibold text-zinc-300">Your vault is empty</p>
+              <p className="text-base font-semibold text-zinc-700 dark:text-zinc-300">Your vault is empty</p>
               <p className="mt-1 text-sm text-zinc-500">Add your first credential to get started.</p>
               <Link to="/add" className="mt-5">
                 <Button>
@@ -214,7 +214,7 @@ export function Dashboard() {
                 <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
                   {showStarredHeader ? 'Starred' : 'All credentials'}
                 </span>
-                <div className="flex-1 border-t border-zinc-800" />
+                <div className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
               </div>
             )}
               <Card className="flex items-center justify-between border border-kavach-500/25 p-4 transition-colors hover:border-kavach-500/60 hover:bg-kavach-950/40">
@@ -227,7 +227,7 @@ export function Dashboard() {
                     <CredentialAvatar purpose={cred.purpose} />
                   )}
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-zinc-100">{cred.purpose}</p>
+                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">{cred.purpose}</p>
                     {!isNote && cred.username && (
                       <p className="truncate text-xs text-zinc-400">{cred.username}</p>
                     )}

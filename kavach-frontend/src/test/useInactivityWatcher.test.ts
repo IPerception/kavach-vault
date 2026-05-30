@@ -12,10 +12,12 @@ function setupStoreMock(overrides: { status?: string; lastActivity?: number } = 
   const state = {
     status: overrides.status ?? 'unlocked',
     lastActivity: overrides.lastActivity ?? Date.now(),
-    lock: mockLock,
+    lock: vi.fn(),
+    doLogout: mockLock,
     recordActivity: mockRecordActivity,
     setStatus: vi.fn(),
     unlock: vi.fn(),
+    setColorMode: vi.fn(),
   }
   vi.mocked(useKavachStore).mockReturnValue(state as ReturnType<typeof useKavachStore>)
   // useKavachStore.getState() is called inside the interval callback

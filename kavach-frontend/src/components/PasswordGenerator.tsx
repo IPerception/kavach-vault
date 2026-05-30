@@ -39,10 +39,10 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-zinc-700 p-3">
+    <div className="space-y-3 rounded-lg border border-zinc-300 p-3 dark:border-zinc-700">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-zinc-300">Password Generator</span>
+        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Password Generator</span>
         <Button size="sm" variant="ghost" onClick={handleGenerate} type="button">
           <RefreshCw className="mr-1 h-3 w-3" />
           Generate
@@ -59,7 +59,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
             className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
               preset === value
                 ? 'bg-kavach-500 text-white'
-                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200'
             }`}
           >
             {label}
@@ -68,7 +68,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
       </div>
 
       {/* Mode-specific controls */}
-      <div className="flex flex-wrap gap-3 text-xs text-zinc-400">
+      <div className="flex flex-wrap gap-3 text-xs text-zinc-600 dark:text-zinc-400">
         {preset === 'custom' && (
           <>
             <label className="flex cursor-pointer items-center gap-1">
@@ -111,7 +111,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
                 max={64}
                 value={customOptions.length}
                 onChange={(e) => setCustomOptions((o) => ({ ...o, length: Number(e.target.value) }))}
-                className="w-12 rounded border border-zinc-700 bg-zinc-800 px-1 text-zinc-100"
+                className="w-12 rounded border border-zinc-300 bg-white px-1 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </label>
           </>
@@ -126,7 +126,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
               max={8}
               value={pinLength}
               onChange={(e) => setPinLength(Math.min(8, Math.max(4, Number(e.target.value))))}
-              className="w-12 rounded border border-zinc-700 bg-zinc-800 px-1 text-zinc-100"
+              className="w-12 rounded border border-zinc-300 bg-white px-1 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
           </label>
         )}
@@ -140,7 +140,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
               max={64}
               value={alphanumLength}
               onChange={(e) => setAlphanumLength(Number(e.target.value))}
-              className="w-12 rounded border border-zinc-700 bg-zinc-800 px-1 text-zinc-100"
+              className="w-12 rounded border border-zinc-300 bg-white px-1 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
             <span className="text-zinc-500">(A-Z a-z 0-9)</span>
           </label>
@@ -161,7 +161,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
                     wordCount: Math.min(6, Math.max(3, Number(e.target.value))),
                   }))
                 }
-                className="w-12 rounded border border-zinc-700 bg-zinc-800 px-1 text-zinc-100"
+                className="w-12 rounded border border-zinc-300 bg-white px-1 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </label>
             <label className="flex cursor-pointer items-center gap-1">
@@ -169,7 +169,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
               <select
                 value={passphraseOptions.separator}
                 onChange={(e) => setPassphraseOptions((o) => ({ ...o, separator: e.target.value }))}
-                className="rounded border border-zinc-700 bg-zinc-800 px-1 py-0.5 text-zinc-100"
+                className="rounded border border-zinc-300 bg-white px-1 py-0.5 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               >
                 {SEPARATORS.map(({ value, label }) => (
                   <option key={value} value={value}>
@@ -184,7 +184,7 @@ export function PasswordGenerator({ onGenerated }: PasswordGeneratorProps) {
 
       {/* Preview */}
       {preview && (
-        <p className="break-all rounded bg-zinc-800 px-2 py-1 font-mono text-xs text-zinc-200">
+        <p className="break-all rounded bg-zinc-100 px-2 py-1 font-mono text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
           {preview}
         </p>
       )}

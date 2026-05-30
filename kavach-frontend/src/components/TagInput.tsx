@@ -32,8 +32,8 @@ export function TagInput({ value, onChange }: TagInputProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-zinc-300">Tags (optional)</label>
-      <div className="flex min-h-[2.25rem] flex-wrap items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 focus-within:ring-2 focus-within:ring-kavach-500">
+      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tags (optional)</label>
+      <div className="flex min-h-[2.25rem] flex-wrap items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 focus-within:ring-2 focus-within:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800">
         {value.map((tag) => (
           <span
             key={tag}
@@ -57,7 +57,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
           onKeyDown={handleKeyDown}
           onBlur={() => { if (inputValue) addTag(inputValue) }}
           placeholder={value.length === 0 ? 'Type and press Enter or comma' : ''}
-          className="min-w-[8rem] flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
+          className="min-w-[8rem] flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-none dark:text-zinc-100 dark:placeholder:text-zinc-500"
         />
       </div>
       <p className="text-xs text-zinc-500">Press Enter or comma to add a tag</p>

@@ -14,7 +14,7 @@ export function CredentialSearch({ value, onChange }: CredentialSearchProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search credentials..."
-        className="w-full rounded-md border border-zinc-700 bg-zinc-800 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
+        className="w-full rounded-md border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
       />
     </div>
   )

@@ -38,11 +38,11 @@ export function AuditLog() {
           <p className="py-8 text-center text-sm text-zinc-500">No audit entries yet.</p>
         )}
 
-        <ul className="divide-y divide-zinc-800">
+        <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
           {entries.map((entry) => (
             <li key={entry.id} className="flex items-center justify-between py-3">
               <div>
-                <p className="text-sm text-zinc-200">
+                <p className="text-sm text-zinc-800 dark:text-zinc-200">
                   <Badge variant={ACTION_BADGE[entry.action] ?? 'default'} className="mr-2">
                     {entry.action}
                   </Badge>
