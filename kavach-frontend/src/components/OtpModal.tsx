@@ -10,12 +10,14 @@ import { useOtpFlow } from '../hooks/useOtpFlow'
 interface OtpModalProps {
   credentialId: number
   purpose: string
+  credentialType?: 'PASSWORD' | 'NOTE'
   children: React.ReactNode
 }
 
-export function OtpModal({ credentialId, purpose, children }: OtpModalProps) {
+export function OtpModal({ credentialId, purpose, credentialType = 'PASSWORD', children }: OtpModalProps) {
   const { state, password, error, open, submitCode, reset } = useOtpFlow(credentialId)
   const codeRef = useRef<HTMLInputElement>(null)
+  const isNote = credentialType === 'NOTE'
 
   return (
     <Dialog.Root onOpenChange={(isOpen) => { if (!isOpen) reset() }}>
@@ -30,10 +32,10 @@ export function OtpModal({ credentialId, purpose, children }: OtpModalProps) {
           onInteractOutside={reset}
         >
           <Dialog.Title className="mb-1 text-base font-semibold text-kavach-500">
-            Reveal password
+            {isNote ? 'Reveal note' : 'Reveal password'}
           </Dialog.Title>
           <Dialog.Description className="mb-4 text-sm text-zinc-400">
-            Enter the 6-digit code from your authenticator app to reveal the password for{' '}
+            Enter the 6-digit code from your authenticator app to reveal the {isNote ? 'note' : 'password'} for{' '}
             <span className="font-medium text-zinc-200">{purpose}</span>.
           </Dialog.Description>
 
@@ -72,11 +74,17 @@ export function OtpModal({ credentialId, purpose, children }: OtpModalProps) {
 
           {state === 'revealed' && password && (
             <div className="space-y-3">
-              <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-3">
-                <MaskedPassword password={password} />
-              </div>
+              {isNote ? (
+                <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-zinc-700 bg-zinc-800 p-3 font-mono text-sm text-zinc-100">
+                  {password}
+                </pre>
+              ) : (
+                <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-3">
+                  <MaskedPassword password={password} />
+                </div>
+              )}
               <div className="flex items-center justify-between">
-                <ClipboardCopy text={password} label="Copy password" />
+                <ClipboardCopy text={password} label={isNote ? 'Copy note' : 'Copy password'} />
                 <CountdownTimer seconds={60} onExpire={reset} />
               </div>
               <div className="flex justify-end">

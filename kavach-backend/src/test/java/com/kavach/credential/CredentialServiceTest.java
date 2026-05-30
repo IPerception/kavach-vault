@@ -79,7 +79,7 @@ class CredentialServiceTest {
         when(credentialMapper.toSummaryDto(any())).thenReturn(summary);
 
         CredentialSummaryDto result = credentialService.create(
-                new CreateCredentialRequest("Gmail", "alice", "secret", "", ""), "alice");
+                new CreateCredentialRequest("Gmail", "alice", "secret", "", "", null), "alice");
 
         verify(credentialRepository).save(argThat(c ->
                 "Gmail".equals(c.getPurpose()) &&
@@ -100,7 +100,7 @@ class CredentialServiceTest {
         when(credentialMapper.toSummaryDto(any())).thenReturn(
                 CredentialSummaryDto.builder().id(1L).purpose("X").username("u").build());
 
-        credentialService.create(new CreateCredentialRequest("X", "u", "pw", "", ""), "alice");
+        credentialService.create(new CreateCredentialRequest("X", "u", "pw", "", "", null), "alice");
 
         // encrypt called twice: once for DEK (with masterKey), once for password (with DEK key)
         verify(encryptionService, times(2)).encrypt(any(), any());
@@ -115,7 +115,7 @@ class CredentialServiceTest {
         when(credentialRepository.save(any())).thenThrow(DataIntegrityViolationException.class);
 
         assertThatThrownBy(() ->
-                credentialService.create(new CreateCredentialRequest("Gmail", "alice", "pw", "", ""), "alice"))
+                credentialService.create(new CreateCredentialRequest("Gmail", "alice", "pw", "", "", null), "alice"))
                 .isInstanceOf(DuplicateCredentialException.class);
     }
 
@@ -129,7 +129,7 @@ class CredentialServiceTest {
         when(credentialMapper.toSummaryDto(any())).thenReturn(
                 CredentialSummaryDto.builder().id(1L).purpose("Gmail").username("alice").build());
 
-        credentialService.create(new CreateCredentialRequest("Gmail", "alice", "pw", "", ""), "alice");
+        credentialService.create(new CreateCredentialRequest("Gmail", "alice", "pw", "", "", null), "alice");
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(eventPublisher).publishEvent(captor.capture());
@@ -183,7 +183,7 @@ class CredentialServiceTest {
                 CredentialSummaryDto.builder().id(1L).purpose("Gmail").username("newUser").build());
 
         CredentialSummaryDto result = credentialService.update(
-                1L, new UpdateCredentialRequest("newUser", "newPw", "", ""), "alice");
+                1L, new UpdateCredentialRequest("newUser", "newPw", "", "", null), "alice");
 
         verify(credentialRepository).save(argThat(c ->
                 "newUser".equals(c.getUsername()) &&
@@ -198,7 +198,7 @@ class CredentialServiceTest {
         when(credentialRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                credentialService.update(99L, new UpdateCredentialRequest("u", "p", "", ""), "alice"))
+                credentialService.update(99L, new UpdateCredentialRequest("u", "p", "", "", null), "alice"))
                 .isInstanceOf(CredentialNotFoundException.class);
     }
 
@@ -215,7 +215,7 @@ class CredentialServiceTest {
         when(credentialRepository.findById(1L)).thenReturn(Optional.of(existing));
 
         assertThatThrownBy(() ->
-                credentialService.update(1L, new UpdateCredentialRequest("u", "p", "", ""), "alice"))
+                credentialService.update(1L, new UpdateCredentialRequest("u", "p", "", "", null), "alice"))
                 .isInstanceOf(CredentialNotFoundException.class);
     }
 
@@ -231,7 +231,7 @@ class CredentialServiceTest {
         when(credentialMapper.toSummaryDto(any())).thenReturn(
                 CredentialSummaryDto.builder().id(1L).purpose("Gmail").username("alice").build());
 
-        credentialService.update(1L, new UpdateCredentialRequest("alice", "newPw", "", ""), "alice");
+        credentialService.update(1L, new UpdateCredentialRequest("alice", "newPw", "", "", null), "alice");
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(eventPublisher).publishEvent(captor.capture());
@@ -512,6 +512,7 @@ class CredentialServiceTest {
     private Credential buildCredential(Long id, String purpose) {
         return Credential.builder()
                 .id(id).user(testUser).purpose(purpose).username("alice")
+                .credentialType("PASSWORD").favourite(false)
                 .encryptedPassword(new byte[60]).dekEncrypted(new byte[60])
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
     }

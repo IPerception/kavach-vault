@@ -20,5 +20,8 @@
     <include file="db/changelog/003-drop-iv-column.xml"/>
     <include file="db/changelog/004-add-totp-secret.xml"/>
     <include file="db/changelog/005-add-url-notes.xml"/>
+    <include file="db/changelog/006-add-tags.xml"/>
+    <include file="db/changelog/007-add-credential-type.xml"/>
+    <include file="db/changelog/008-add-favourite.xml"/>
 
 </databaseChangeLog>

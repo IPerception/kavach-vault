@@ -13,12 +13,12 @@ import com.kavach.dto.CredentialSummaryDto;
 import com.kavach.dto.ExportResponse;
 import com.kavach.dto.ImportResult;
 import com.kavach.dto.request.CreateCredentialRequest;
+import com.kavach.dto.request.CreateNoteRequest;
 import com.kavach.dto.request.ImportRequest;
 import com.kavach.dto.request.UpdateCredentialRequest;
 import com.kavach.event.AuditEvent;
 import com.kavach.exception.CredentialNotFoundException;
 import com.kavach.exception.DuplicateCredentialException;
-import org.springframework.dao.DataIntegrityViolationException;
 import com.kavach.mapper.CredentialMapper;
 import com.kavach.repository.CredentialRepository;
 import com.kavach.repository.VaultUserRepository;
@@ -41,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class CredentialService {
@@ -85,6 +86,9 @@ public class CredentialService {
                 .username(request.getUsername() != null ? request.getUsername() : "")
                 .url(request.getUrl())
                 .notes(request.getNotes())
+                .tags(joinTags(request.getTags()))
+                .credentialType("PASSWORD")
+                .favourite(false)
                 .encryptedPassword(encryptedPassword)
                 .dekEncrypted(dekEncrypted)
                 .createdAt(LocalDateTime.now())
@@ -98,6 +102,49 @@ public class CredentialService {
         }
 
         eventPublisher.publishEvent(new AuditEvent(user, AuditAction.CREATE, null));
+        return credentialMapper.toSummaryDto(credential);
+    }
+
+    @Transactional
+    public CredentialSummaryDto createNote(CreateNoteRequest request, String username) {
+        VaultUser user = loadUser(username);
+        SecretKey masterKey = sessionKeyStore.getKey();
+
+        byte[] dek = encryptionService.generateDek();
+        SecretKey dekKey = encryptionService.bytesToKey(dek);
+        byte[] encryptedBody = encryptionService.encrypt(request.getBody().getBytes(), dekKey);
+        byte[] dekEncrypted = encryptionService.encrypt(dek, masterKey);
+
+        Credential credential = Credential.builder()
+                .user(user)
+                .purpose(request.getTitle())
+                .username("")
+                .tags(joinTags(request.getTags()))
+                .credentialType("NOTE")
+                .favourite(false)
+                .encryptedPassword(encryptedBody)
+                .dekEncrypted(dekEncrypted)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        try {
+            credential = credentialRepository.save(credential);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateCredentialException(request.getTitle());
+        }
+
+        eventPublisher.publishEvent(new AuditEvent(user, AuditAction.CREATE, null));
+        return credentialMapper.toSummaryDto(credential);
+    }
+
+    @Transactional
+    public CredentialSummaryDto toggleFavourite(Long id, String username) {
+        VaultUser user = loadUser(username);
+        Credential credential = findOwnedCredential(id, user);
+        credential.setFavourite(!credential.isFavourite());
+        credential.setUpdatedAt(LocalDateTime.now());
+        credential = credentialRepository.save(credential);
         return credentialMapper.toSummaryDto(credential);
     }
 
@@ -115,6 +162,7 @@ public class CredentialService {
         credential.setUsername(request.getUsername() != null ? request.getUsername() : "");
         credential.setUrl(request.getUrl());
         credential.setNotes(request.getNotes());
+        credential.setTags(joinTags(request.getTags()));
 
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             SecretKey masterKey = sessionKeyStore.getKey();
@@ -159,6 +207,9 @@ public class CredentialService {
             entry.put("password", new String(pw, StandardCharsets.UTF_8));
             entry.put("url", c.getUrl());
             entry.put("notes", c.getNotes());
+            entry.put("tags", c.getTags());
+            entry.put("credentialType", c.getCredentialType());
+            entry.put("favourite", c.isFavourite());
             Arrays.fill(pw, (byte) 0);
             entries.add(entry);
         }
@@ -213,8 +264,17 @@ public class CredentialService {
                 String password = (String) entry.get("password");
                 String url = entry.get("url") != null ? (String) entry.get("url") : "";
                 String notes = entry.get("notes") != null ? (String) entry.get("notes") : "";
+                String rawTags = entry.get("tags") != null ? (String) entry.get("tags") : null;
+                String type = entry.get("credentialType") != null ? (String) entry.get("credentialType") : "PASSWORD";
                 if (purpose == null || password == null) { skipped++; continue; }
-                create(new CreateCredentialRequest(purpose, entryUsername, password, url, notes), username);
+                List<String> tagList = rawTags != null && !rawTags.isBlank()
+                        ? Arrays.stream(rawTags.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
+                        : List.of();
+                if ("NOTE".equals(type)) {
+                    createNote(new CreateNoteRequest(purpose, password, tagList), username);
+                } else {
+                    create(new CreateCredentialRequest(purpose, entryUsername, password, url, notes, tagList), username);
+                }
                 imported++;
             } catch (DuplicateCredentialException | DataIntegrityViolationException e) {
                 skipped++;
@@ -227,7 +287,9 @@ public class CredentialService {
     public List<CredentialHealthDto> healthReport(String username) {
         VaultUser user = loadUser(username);
         SecretKey masterKey = sessionKeyStore.getKey();
-        List<Credential> credentials = credentialRepository.findAllByUser(user);
+        List<Credential> credentials = credentialRepository.findAllByUser(user).stream()
+                .filter(c -> !"NOTE".equals(c.getCredentialType()))
+                .toList();
 
         // Decrypt each password and compute a SHA-256 hash for duplicate detection.
         // Hashes are never sent to the client -- only the duplicate flag is.
@@ -316,5 +378,10 @@ public class CredentialService {
             throw new CredentialNotFoundException(id);
         }
         return credential;
+    }
+
+    private String joinTags(List<String> tags) {
+        if (tags == null || tags.isEmpty()) return null;
+        return tags.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.joining(","));
     }
 }

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Safe public view of a credential - no encrypted fields exposed.
@@ -20,6 +21,9 @@ public class CredentialSummaryDto {
     private final String username;
     private final String url;
     private final String notes;
+    private final List<String> tags;
+    private final String credentialType;
+    private final boolean favourite;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 }

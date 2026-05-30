@@ -14,19 +14,13 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateCredentialRequest {
+public class CreateNoteRequest {
 
-    @NotBlank(message = "Purpose is required")
-    private String purpose;
+    @NotBlank(message = "Title is required")
+    private String title;
 
-    private String username;
-
-    @NotBlank(message = "Password is required")
-    private String password;
-
-    private String url;
-
-    private String notes;
+    @NotBlank(message = "Note body is required")
+    private String body;
 
     private List<String> tags;
 }

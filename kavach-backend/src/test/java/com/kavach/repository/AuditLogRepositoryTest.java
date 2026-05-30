@@ -53,6 +53,8 @@ class AuditLogRepositoryTest {
                 .user(user)
                 .purpose("Gmail")
                 .username("john@example.com")
+                .credentialType("PASSWORD")
+                .favourite(false)
                 .encryptedPassword(new byte[]{1, 2, 3})
                 .dekEncrypted(new byte[]{4, 5, 6})
                 .createdAt(LocalDateTime.now())

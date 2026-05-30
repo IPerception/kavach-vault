@@ -72,6 +72,15 @@ public class Credential {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(columnDefinition = "TEXT")
+    private String tags;
+
+    @Column(name = "credential_type", nullable = false)
+    private String credentialType;
+
+    @Column(nullable = false)
+    private boolean favourite;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

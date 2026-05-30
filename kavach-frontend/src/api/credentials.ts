@@ -7,6 +7,7 @@ interface CreateCredentialBody {
   password: string
   url?: string
   notes?: string
+  tags?: string[]
 }
 
 interface UpdateCredentialBody {
@@ -14,6 +15,7 @@ interface UpdateCredentialBody {
   password?: string
   url?: string
   notes?: string
+  tags?: string[]
 }
 
 export const listCredentials = () =>
@@ -38,3 +40,9 @@ export const exportVault = () =>
 
 export const importVault = (payload: VaultExport) =>
   client.post<ImportResult>('/credentials/import', payload).then((r) => r.data)
+
+export const createNote = (body: { title: string; body: string; tags?: string[] }) =>
+  client.post<CredentialSummary>('/credentials/notes', body).then((r) => r.data)
+
+export const toggleFavourite = (id: number) =>
+  client.put<CredentialSummary>(`/credentials/${id}/favourite`).then((r) => r.data)

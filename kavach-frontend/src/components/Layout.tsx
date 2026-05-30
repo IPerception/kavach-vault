@@ -2,6 +2,8 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { DoorOpen, LockKeyhole, List, PlusCircle, Settings, ScrollText, ShieldAlert } from 'lucide-react'
 import { useKavachStore } from '../store/useKavachStore'
 import { useInactivityWatcher } from '../hooks/useInactivityWatcher'
+import { useUpdateCheck } from '../hooks/useUpdateCheck'
+import { UpdateBanner } from './UpdateBanner'
 import { Button } from './ui/Button'
 import { clsx } from 'clsx'
 
@@ -16,6 +18,7 @@ const navItems = [
 export function Layout() {
   const { lock, doLogout } = useKavachStore()
   useInactivityWatcher()
+  const updateVersion = useUpdateCheck()
 
   return (
     <div className="flex min-h-screen flex-col p-5">
@@ -70,6 +73,8 @@ export function Layout() {
             ))}
           </div>
         </nav>
+
+        {updateVersion && <UpdateBanner version={updateVersion} />}
 
         <main className="flex-1 px-6 py-6">
           <Outlet />

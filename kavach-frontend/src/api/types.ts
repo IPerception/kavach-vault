@@ -8,6 +8,9 @@ export interface CredentialSummary {
   username?: string
   url?: string | null
   notes?: string | null
+  tags?: string[]
+  credentialType?: 'PASSWORD' | 'NOTE'
+  favourite?: boolean
   createdAt: string
   updatedAt: string
 }

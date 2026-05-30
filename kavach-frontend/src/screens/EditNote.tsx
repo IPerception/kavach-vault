@@ -8,20 +8,15 @@ import { listCredentials, updateCredential } from '../api/credentials'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
-import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
-import { PasswordGenerator } from '../components/PasswordGenerator'
 import { TagInput } from '../components/TagInput'
 
 const schema = z.object({
-  username: z.string().optional(),
-  password: z.string().optional(),
-  url: z.union([z.string().url('Enter the full URL including https://'), z.literal('')]).optional(),
-  notes: z.string().optional(),
+  body: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
 
-export function EditCredential() {
+export function EditNote() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -40,33 +35,15 @@ export function EditCredential() {
     }
   }, [credential])
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const { register, handleSubmit } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: credential
-      ? {
-          username: credential.username ?? '',
-          password: '',
-          url: credential.url ?? '',
-          notes: credential.notes ?? '',
-        }
-      : undefined,
+    defaultValues: { body: '' },
   })
-
-  const password = watch('password', '')
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) =>
       updateCredential(Number(id), {
-        username: data.username,
-        password: data.password || undefined,
-        url: data.url || undefined,
-        notes: data.notes || undefined,
+        password: data.body || undefined,
         tags,
       }),
     onSuccess: () => {
@@ -76,70 +53,38 @@ export function EditCredential() {
   })
 
   if (!credential) {
-    return <p className="text-sm text-zinc-400">Credential not found.</p>
+    return <p className="text-sm text-zinc-400">Note not found.</p>
   }
 
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle className="text-kavach-500">Edit credential</CardTitle>
+        <CardTitle className="text-kavach-500">Edit secure note</CardTitle>
       </CardHeader>
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
         <Input
-          id="purpose"
-          label="Purpose"
+          id="title"
+          label="Title"
           value={credential.purpose}
           readOnly
           className="cursor-not-allowed opacity-50"
         />
-        <Input
-          id="username"
-          label="Username / email (optional)"
-          autoComplete="username"
-          error={errors.username?.message}
-          {...register('username')}
-        />
-        <div>
-          <Input
-            id="password"
-            label="New password (leave blank to keep existing)"
-            type="password"
-            autoComplete="new-password"
-            error={errors.password?.message}
-            {...register('password')}
-          />
-          {password && <PasswordStrengthMeter password={password} />}
-        </div>
-        <PasswordGenerator
-          onGenerated={(pw) => {
-            if (window.confirm('Replace the current password with the generated one?')) {
-              setValue('password', pw, { shouldValidate: true })
-            }
-          }}
-        />
-        <Input
-          id="url"
-          label="URL (optional)"
-          type="text"
-          placeholder="https://example.com"
-          error={errors.url?.message}
-          {...register('url')}
-        />
         <div className="flex flex-col gap-1">
-          <label htmlFor="notes" className="text-sm font-medium text-zinc-300">
-            Notes (optional)
+          <label htmlFor="body" className="text-sm font-medium text-zinc-300">
+            New note body (leave blank to keep existing)
           </label>
           <textarea
-            id="notes"
-            rows={3}
+            id="body"
+            rows={6}
+            placeholder="Type new content to replace the existing note..."
             className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-kavach-500"
-            {...register('notes')}
+            {...register('body')}
           />
         </div>
         <TagInput value={tags} onChange={setTags} />
         {mutation.isError && (
-          <p className="text-xs text-red-400">Failed to update credential.</p>
+          <p className="text-xs text-red-400">Failed to update note.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>

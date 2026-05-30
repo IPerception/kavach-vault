@@ -83,7 +83,7 @@ class OtpControllerTest {
         MvcResult createResult = mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "gmailPw1!", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "gmailPw1!", "", "", null))))
                 .andExpect(status().isCreated())
                 .andReturn();
 

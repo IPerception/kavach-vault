@@ -13,7 +13,7 @@
 
     <groupId>com.kavach</groupId>
     <artifactId>kavach</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
     <name>Kavach</name>
     <description>Local-first personal password manager</description>

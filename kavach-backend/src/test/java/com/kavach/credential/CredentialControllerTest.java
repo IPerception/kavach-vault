@@ -68,7 +68,7 @@ class CredentialControllerTest {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "gmailPw1!", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "gmailPw1!", "", "", null))))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", containsString("/api/credentials/")));
     }
@@ -78,7 +78,7 @@ class CredentialControllerTest {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("", "alice", "pw", "", ""))))
+                .content(json(new CreateCredentialRequest("", "alice", "pw", "", "", null))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -87,12 +87,12 @@ class CredentialControllerTest {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw1", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw1", "", "", null))));
 
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "other@gmail.com", "pw2", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "other@gmail.com", "pw2", "", "", null))))
                 .andExpect(status().isConflict());
     }
 
@@ -100,7 +100,7 @@ class CredentialControllerTest {
     void createCredential_withoutJwt_returns401() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice", "pw", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "alice", "pw", "", "", null))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -108,10 +108,10 @@ class CredentialControllerTest {
     void listCredentials_returnsAllCreated() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw1", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw1", "", "", null))));
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("GitHub", "alice", "pw2", "", ""))));
+                .content(json(new CreateCredentialRequest("GitHub", "alice", "pw2", "", "", null))));
 
         mockMvc.perform(get("/api/credentials").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -136,7 +136,7 @@ class CredentialControllerTest {
     void listCredentials_responseDoesNotContainEncryptedFields() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "secret", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "secret", "", "", null))));
 
         mockMvc.perform(get("/api/credentials").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -148,14 +148,14 @@ class CredentialControllerTest {
     void updateCredential_validRequest_returns200() throws Exception {
         MvcResult createResult = mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "oldPw", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "oldPw", "", "", null))))
                 .andReturn();
 
         long id = extractIdFromLocation(createResult.getResponse().getHeader("Location"));
 
         mockMvc.perform(put("/api/credentials/" + id)
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new UpdateCredentialRequest("alice_new@gmail.com", "newPw1!", "", ""))))
+                .content(json(new UpdateCredentialRequest("alice_new@gmail.com", "newPw1!", "", "", null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("alice_new@gmail.com"));
     }
@@ -164,7 +164,7 @@ class CredentialControllerTest {
     void updateCredential_notFound_returns404() throws Exception {
         mockMvc.perform(put("/api/credentials/9999")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new UpdateCredentialRequest("u", "p", "", ""))))
+                .content(json(new UpdateCredentialRequest("u", "p", "", "", null))))
                 .andExpect(status().isNotFound());
     }
 
@@ -172,7 +172,7 @@ class CredentialControllerTest {
     void updateCredential_withoutJwt_returns401() throws Exception {
         mockMvc.perform(put("/api/credentials/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json(new UpdateCredentialRequest("u", "p", "", ""))))
+                .content(json(new UpdateCredentialRequest("u", "p", "", "", null))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -180,7 +180,7 @@ class CredentialControllerTest {
     void deleteCredential_validId_returns204() throws Exception {
         MvcResult createResult = mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw", "", "", null))))
                 .andReturn();
 
         long id = extractIdFromLocation(createResult.getResponse().getHeader("Location"));
@@ -225,7 +225,7 @@ class CredentialControllerTest {
     void export_singleCredential_returnsEncryptedBlob() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "secret1!", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "secret1!", "", "", null))));
 
         mockMvc.perform(get("/api/credentials/export").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -248,7 +248,7 @@ class CredentialControllerTest {
         // create a credential
         MvcResult createResult = mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "Passw0rd!", "", ""))))
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "Passw0rd!", "", "", null))))
                 .andReturn();
         long id = extractIdFromLocation(createResult.getResponse().getHeader("Location"));
 
@@ -281,7 +281,7 @@ class CredentialControllerTest {
     void import_duplicateCredentials_skipsExisting() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "Passw0rd!", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "Passw0rd!", "", "", null))));
 
         MvcResult exportResult = mockMvc.perform(get("/api/credentials/export").cookie(jwtCookie))
                 .andReturn();
@@ -331,7 +331,7 @@ class CredentialControllerTest {
     void healthReport_singleCredential_returnsStrengthAndDuplicateFields() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "pw", "", "", null))));
 
         mockMvc.perform(get("/api/credentials/health").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -347,7 +347,7 @@ class CredentialControllerTest {
     void healthReport_responseDoesNotContainPassword() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "secret", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "secret", "", "", null))));
 
         mockMvc.perform(get("/api/credentials/health").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -359,10 +359,10 @@ class CredentialControllerTest {
     void healthReport_twoCredentialsWithSamePassword_bothMarkedDuplicate() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "samePass1!", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "samePass1!", "", "", null))));
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("GitHub", "alice", "samePass1!", "", ""))));
+                .content(json(new CreateCredentialRequest("GitHub", "alice", "samePass1!", "", "", null))));
 
         mockMvc.perform(get("/api/credentials/health").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -375,10 +375,10 @@ class CredentialControllerTest {
     void healthReport_twoCredentialsWithDifferentPasswords_neitherMarkedDuplicate() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "passA1!", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "passA1!", "", "", null))));
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("GitHub", "alice", "passB2@", "", ""))));
+                .content(json(new CreateCredentialRequest("GitHub", "alice", "passB2@", "", "", null))));
 
         mockMvc.perform(get("/api/credentials/health").cookie(jwtCookie))
                 .andExpect(status().isOk())
@@ -390,7 +390,7 @@ class CredentialControllerTest {
     void healthReport_strongPassword_scoreIsFour() throws Exception {
         mockMvc.perform(post("/api/credentials")
                 .cookie(jwtCookie).contentType(MediaType.APPLICATION_JSON)
-                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "Str0ng!Pass#1", "", ""))));
+                .content(json(new CreateCredentialRequest("Gmail", "alice@gmail.com", "Str0ng!Pass#1", "", "", null))));
 
         mockMvc.perform(get("/api/credentials/health").cookie(jwtCookie))
                 .andExpect(status().isOk())

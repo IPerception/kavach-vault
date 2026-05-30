@@ -9,6 +9,8 @@ import { LockScreen } from './screens/LockScreen'
 import { Dashboard } from './screens/Dashboard'
 import { AddCredential } from './screens/AddCredential'
 import { EditCredential } from './screens/EditCredential'
+import { AddNote } from './screens/AddNote'
+import { EditNote } from './screens/EditNote'
 import { AuditLog } from './screens/AuditLog'
 import { Settings } from './screens/Settings'
 import { HealthReport } from './screens/HealthReport'
@@ -20,6 +22,8 @@ function PrivateRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="add" element={<AddCredential />} />
         <Route path="edit/:id" element={<EditCredential />} />
+        <Route path="add-note" element={<AddNote />} />
+        <Route path="edit-note/:id" element={<EditNote />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="health" element={<HealthReport />} />
         <Route path="settings" element={<Settings />} />

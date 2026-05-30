@@ -6,6 +6,9 @@ target/
 # Native installer output (jpackage app-image)
 dist/
 
+# Release zip assets (attached to GitHub releases, not committed)
+*.zip
+
 # Maven wrapper cache
 .mvn/repository/
 
@@ -14,6 +17,7 @@ kavach-frontend/node/
 kavach-frontend/node_modules/
 kavach-frontend/dist/
 kavach-frontend/coverage/
+kavach-frontend/**/*.tsbuildinfo
 
 # Runtime files - generated on every start, not source
 kavach.port

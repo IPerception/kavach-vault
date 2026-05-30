@@ -5,6 +5,7 @@ import com.kavach.dto.CredentialSummaryDto;
 import com.kavach.dto.ExportResponse;
 import com.kavach.dto.ImportResult;
 import com.kavach.dto.request.CreateCredentialRequest;
+import com.kavach.dto.request.CreateNoteRequest;
 import com.kavach.dto.request.ImportRequest;
 import com.kavach.dto.request.UpdateCredentialRequest;
 import jakarta.validation.Valid;
@@ -69,6 +70,25 @@ public class CredentialController {
             @RequestBody ImportRequest request,
             @AuthenticationPrincipal String username) {
         return ResponseEntity.ok(credentialService.importVault(request, username));
+    }
+
+    @PostMapping("/notes")
+    public ResponseEntity<CredentialSummaryDto> createNote(
+            @Valid @RequestBody CreateNoteRequest request,
+            @AuthenticationPrincipal String username) {
+        CredentialSummaryDto created = credentialService.createNote(request, username);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .replacePath("/api/credentials/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
+    }
+
+    @PutMapping("/{id}/favourite")
+    public ResponseEntity<CredentialSummaryDto> toggleFavourite(
+            @PathVariable Long id,
+            @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(credentialService.toggleFavourite(id, username));
     }
 
     @DeleteMapping("/{id}")

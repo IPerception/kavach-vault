@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Request body for PUT /api/credentials/{id}.
  * Purpose is immutable after creation (it is part of the unique key).
@@ -25,4 +27,6 @@ public class UpdateCredentialRequest {
     private String url;
 
     private String notes;
+
+    private List<String> tags;
 }
