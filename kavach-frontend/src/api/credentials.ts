@@ -41,6 +41,12 @@ export const exportVault = () =>
 export const importVault = (payload: VaultExport) =>
   client.post<ImportResult>('/credentials/import', payload).then((r) => r.data)
 
+export const importCsv = (file: File) => {
+  const form = new FormData()
+  form.append('file', file)
+  return client.post<ImportResult>('/credentials/import-csv', form).then((r) => r.data)
+}
+
 export const createNote = (body: { title: string; body: string; tags?: string[] }) =>
   client.post<CredentialSummary>('/credentials/notes', body).then((r) => r.data)
 

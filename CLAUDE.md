@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Kavach** (कवच, Sanskrit for *shield*) is a local-first personal password manager. A single `java -jar kavach.jar` launches both the Spring Boot backend and serves the React frontend as static files. All data stays on disk — no cloud, no external services except optional SMTP for OTP delivery.
+**Kavach** (कवच, Sanskrit for *shield*) is a local-first personal password manager. A single `java -jar kavach.jar` launches both the Spring Boot backend and serves the React frontend as static files. All data stays on disk — no cloud, no external services.
 
 ## Build & Run
 
@@ -109,12 +109,11 @@ DEK + IV₂ → AES-256-GCM → encrypts actual password (stored in DB)
 - Public routes: `/api/auth/**`. Everything else under `/api/**` requires a valid JWT.
 - Account lockout: 5 failed login attempts → 15-min cooldown (Bucket4j, in-memory).
 
-### OTP Reveal Flow
+### TOTP Reveal Flow
 
-1. `POST /api/credentials/{id}/request-otp` — OtpFactory generates a `SecureRandom` 6-digit code, stores it in-memory (`ConcurrentHashMap`) with 5-min expiry, sends via JavaMail.
-2. `POST /api/credentials/{id}/reveal` — validates OTP with `MessageDigest.isEqual()` (constant-time), deletes OTP entry (single-use), decrypts and returns the password.
+1. User sets up TOTP during the setup wizard: `POST /api/totp/setup` returns a QR code URI; `POST /api/totp/confirm` validates the first code and stores the encrypted TOTP secret on `vault_user.totp_secret_encrypted`.
+2. `POST /api/credentials/{id}/reveal` — user submits the current 6-digit TOTP code from their authenticator app; `TotpService.isValidCode()` decrypts the stored secret and validates via the samstevens TOTP library (30-second window); on success, decrypts and returns the password.
 3. Frontend auto-vanishes the password after 60s; clipboard auto-clears after 30s.
-4. Rate limit: max 3 OTP requests per credential per 15 min.
 
 ### Audit Logging
 
@@ -138,8 +137,7 @@ TanStack Query handles all API server state (caching, loading, error, background
 | Repository | All DB access via Spring Data JPA repos |
 | Service Layer | Business logic only in `@Service`; controllers delegate immediately |
 | Facade | `EncryptionService` hides raw crypto APIs |
-| Factory | `OtpFactory` creates `OtpEntry`; never construct inline |
-| Strategy | `NotificationStrategy` interface → `EmailNotificationStrategy` (TOTP is a future second impl) |
+| Strategy | `NotificationStrategy` interface → `EmailNotificationStrategy` (extensible for future notification types) |
 | Observer | Spring `ApplicationEventPublisher` for audit events |
 | Builder | All DTOs use Lombok `@Builder` |
 | Null Object | `AnonymousKavachSession` implements `KavachSession` with no-ops; eliminates null checks |
@@ -168,7 +166,7 @@ SMTP credentials and port config live in `app_config` (encrypted with master key
 
 - OWASP Dependency-Check runs in the Maven build; fails on CVSS ≥ 7.
 - Secrets (`byte[]`/`char[]`) must be zeroed after use — verify `SessionKeyStore.clear()` is called on every exit path (logout, lock, shutdown hook).
-- OTP comparison must use `MessageDigest.isEqual()` — not `String.equals()`.
+- TOTP validation uses the samstevens library via `TotpService.isValidCode()` — never compare TOTP codes with `String.equals()`.
 - DEK re-encryption on master password change must be a single `@Transactional` method covering all credentials.
 - Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'`.
 

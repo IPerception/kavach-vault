@@ -87,6 +87,13 @@
             <version>1.7.1</version>
         </dependency>
 
+        <!-- CSV parsing for import -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+
         <!-- TLS certificate generation for localhost HTTPS (bcprov pulled in transitively) -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

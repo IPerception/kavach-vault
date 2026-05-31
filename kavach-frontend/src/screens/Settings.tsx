@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import { SmartphoneNfc, KeyRound, Palette, ChevronRight, X, Info, Download, Upload, FolderOpen, Clock } from 'lucide-react'
 import { changePassword, setupTotp, confirmTotp } from '../api/auth'
-import { exportVault, importVault } from '../api/credentials'
+import { exportVault, importVault, importCsv } from '../api/credentials'
 import { getBackupDestination, setBackupDestination, clearBackupDestination, runBackupNow } from '../api/backup'
 import { useKavachStore, type KavachTheme } from '../store/useKavachStore'
 import { EXPIRY_DAYS_KEY, EXPIRY_WARNING_KEY, DEFAULT_EXPIRY_DAYS, DEFAULT_WARNING_DAYS } from '../hooks/useExpiryCheck'
@@ -93,21 +93,36 @@ export function Settings() {
     },
   })
 
+  const csvImportMutation = useMutation({
+    mutationFn: (file: File) => importCsv(file),
+    onSuccess: (result) => {
+      setImportResult(result)
+      qc.invalidateQueries({ queryKey: ['credentials'] })
+    },
+    onError: (err: { response?: { data?: { detail?: string } } }) => {
+      setImportError(err?.response?.data?.detail ?? 'Import failed. The file may be invalid or not a supported CSV format.')
+    },
+  })
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setImportError(null)
     setImportResult(null)
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      try {
-        const payload = JSON.parse(ev.target?.result as string) as VaultExport
-        importMutation.mutate(payload)
-      } catch {
-        setImportError('Could not read file. Make sure it is a valid Kavach export.')
+    if (file.name.toLowerCase().endsWith('.csv')) {
+      csvImportMutation.mutate(file)
+    } else {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        try {
+          const payload = JSON.parse(ev.target?.result as string) as VaultExport
+          importMutation.mutate(payload)
+        } catch {
+          setImportError('Could not read file. Make sure it is a valid Kavach export.')
+        }
       }
+      reader.readAsText(file)
     }
-    reader.readAsText(file)
     e.target.value = ''
   }
 
@@ -310,7 +325,7 @@ export function Settings() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".json"
+        accept=".json,.csv"
         className="hidden"
         onChange={handleFileChange}
       />
@@ -507,7 +522,8 @@ export function Settings() {
                         </CardTitle>
                       </div>
                       <p className="text-center text-sm text-zinc-400">
-                        Select a Kavach export file. Credentials that already exist will be skipped.
+                        Select a Kavach export (.json) or a CSV exported from Chrome, LastPass, or Bitwarden.
+                        Credentials that already exist will be skipped.
                       </p>
                     </CardHeader>
 
@@ -526,7 +542,7 @@ export function Settings() {
                         )}
                         <Button
                           variant="secondary"
-                          loading={importMutation.isPending}
+                          loading={importMutation.isPending || csvImportMutation.isPending}
                           onClick={() => fileInputRef.current?.click()}
                         >
                           <Upload className="mr-1.5 h-4 w-4" />

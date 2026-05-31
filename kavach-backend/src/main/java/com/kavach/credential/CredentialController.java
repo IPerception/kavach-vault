@@ -10,9 +10,11 @@ import com.kavach.dto.request.CreateNoteRequest;
 import com.kavach.dto.request.ImportRequest;
 import com.kavach.dto.request.UpdateCredentialRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -23,9 +25,11 @@ import java.util.List;
 public class CredentialController {
 
     private final CredentialService credentialService;
+    private final CsvImportService csvImportService;
 
-    public CredentialController(CredentialService credentialService) {
+    public CredentialController(CredentialService credentialService, CsvImportService csvImportService) {
         this.credentialService = credentialService;
+        this.csvImportService = csvImportService;
     }
 
     @PostMapping
@@ -77,6 +81,13 @@ public class CredentialController {
             @RequestBody ImportRequest request,
             @AuthenticationPrincipal String username) {
         return ResponseEntity.ok(credentialService.importVault(request, username));
+    }
+
+    @PostMapping(value = "/import-csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ImportResult> importCsv(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(csvImportService.importCsv(file, username));
     }
 
     @PostMapping("/notes")

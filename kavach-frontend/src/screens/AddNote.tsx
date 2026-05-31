@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { createNote } from '../api/credentials'
-import { Card, CardHeader, CardTitle } from '../components/ui/Card'
+import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { TagInput } from '../components/TagInput'
@@ -42,10 +42,12 @@ export function AddNote() {
   })
 
   return (
-    <Card className="mx-auto max-w-lg">
-      <CardHeader>
-        <CardTitle className="text-kavach-500">Add secure note</CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
+        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Add Secure Note</h1>
+      </div>
+      <Card className="mx-auto max-w-lg">
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
         <Input
@@ -87,5 +89,6 @@ export function AddNote() {
         </div>
       </form>
     </Card>
+    </div>
   )
 }

@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { RefreshCw } from 'lucide-react'
 import { listCredentials, updateCredential } from '../api/credentials'
-import { Card, CardHeader, CardTitle } from '../components/ui/Card'
+import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
@@ -83,10 +83,12 @@ export function EditCredential() {
   }
 
   return (
-    <Card className="mx-auto max-w-lg">
-      <CardHeader>
-        <CardTitle className="text-kavach-500">Edit credential</CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
+        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Edit Credential</h1>
+      </div>
+      <Card className="mx-auto max-w-lg">
 
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
         <Input
@@ -189,5 +191,6 @@ export function EditCredential() {
         </div>
       </form>
     </Card>
+    </div>
   )
 }
