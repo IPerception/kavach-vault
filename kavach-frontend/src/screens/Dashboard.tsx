@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Dialog from '@radix-ui/react-dialog'
 import { PlusCircle, Pencil, Trash2, ShieldCheck, KeyRound, Globe, ShieldOff, SearchX, ChevronLeft, ChevronRight, Tag, X, Star, StickyNote, NotebookPen } from 'lucide-react'
@@ -33,6 +33,39 @@ export function Dashboard() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; purpose: string } | null>(null)
   const PAGE_SIZE = 25
   const qc = useQueryClient()
+  const navigate = useNavigate()
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function isTyping() {
+      const el = document.activeElement as HTMLElement | null
+      if (!el) return false
+      const tag = el.tagName.toLowerCase()
+      return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        searchRef.current?.focus()
+        searchRef.current?.select()
+        return
+      }
+      if (e.key === 'Escape' && document.activeElement === searchRef.current) {
+        setSearch('')
+        setPage(0)
+        searchRef.current?.blur()
+        return
+      }
+      if (e.key === 'n' && !isTyping()) {
+        e.preventDefault()
+        navigate('/add')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [navigate])
 
   const { data: credentials = [], isLoading } = useQuery({
     queryKey: ['credentials'],
@@ -113,7 +146,7 @@ export function Dashboard() {
 
       {/* Search + Add */}
       <div className="flex items-center gap-3">
-        <CredentialSearch value={search} onChange={(v) => { setSearch(v); setPage(0) }} />
+        <CredentialSearch ref={searchRef} value={search} onChange={(v) => { setSearch(v); setPage(0) }} />
         <Link to="/add">
           <Button size="sm">
             <PlusCircle className="mr-1.5 h-4 w-4" />
