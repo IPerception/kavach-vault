@@ -36,45 +36,89 @@ body {
 /* Amber (default) */
 :root, [data-theme="amber"] {
   --kavach-50:  255 251 235;
+  --kavach-950: 120 53 15;
+}
+.dark[data-theme="amber"], .dark:root {
   --kavach-400: 251 191 36;
   --kavach-500: 245 158 11;
   --kavach-600: 217 119 6;
   --kavach-700: 180 83 9;
-  --kavach-950: 120 53 15;
+}
+[data-theme="amber"]:not(.dark), :root:not(.dark) {
+  --kavach-400: 245 158 11;
+  --kavach-500: 180 83 9;
+  --kavach-600: 154 52 18;
+  --kavach-700: 120 53 15;
 }
 
+/* Sky */
 [data-theme="sky"] {
   --kavach-50:  240 249 255;
+  --kavach-950: 8 47 73;
+}
+.dark[data-theme="sky"] {
   --kavach-400: 56 189 248;
   --kavach-500: 14 165 233;
   --kavach-600: 2 132 199;
   --kavach-700: 3 105 161;
-  --kavach-950: 8 47 73;
+}
+[data-theme="sky"]:not(.dark) {
+  --kavach-400: 14 165 233;
+  --kavach-500: 2 132 199;
+  --kavach-600: 3 105 161;
+  --kavach-700: 7 89 133;
 }
 
+/* Emerald */
 [data-theme="emerald"] {
   --kavach-50:  236 253 245;
+  --kavach-950: 2 44 34;
+}
+.dark[data-theme="emerald"] {
   --kavach-400: 52 211 153;
   --kavach-500: 16 185 129;
   --kavach-600: 5 150 105;
   --kavach-700: 4 120 87;
-  --kavach-950: 2 44 34;
+}
+[data-theme="emerald"]:not(.dark) {
+  --kavach-400: 16 185 129;
+  --kavach-500: 5 150 105;
+  --kavach-600: 4 120 87;
+  --kavach-700: 6 95 70;
 }
 
+/* Rose */
 [data-theme="rose"] {
   --kavach-50:  255 241 242;
+  --kavach-950: 76 5 25;
+}
+.dark[data-theme="rose"] {
   --kavach-400: 251 113 133;
   --kavach-500: 244 63 94;
   --kavach-600: 225 29 72;
   --kavach-700: 190 18 60;
-  --kavach-950: 76 5 25;
+}
+[data-theme="rose"]:not(.dark) {
+  --kavach-400: 244 63 94;
+  --kavach-500: 225 29 72;
+  --kavach-600: 190 18 60;
+  --kavach-700: 159 18 57;
 }
 
+/* Violet */
 [data-theme="violet"] {
   --kavach-50:  245 243 255;
+  --kavach-950: 46 16 101;
+}
+.dark[data-theme="violet"] {
   --kavach-400: 167 139 250;
   --kavach-500: 139 92 246;
   --kavach-600: 124 58 237;
   --kavach-700: 109 40 217;
-  --kavach-950: 46 16 101;
+}
+[data-theme="violet"]:not(.dark) {
+  --kavach-400: 139 92 246;
+  --kavach-500: 124 58 237;
+  --kavach-600: 109 40 217;
+  --kavach-700: 91 33 182;
 }

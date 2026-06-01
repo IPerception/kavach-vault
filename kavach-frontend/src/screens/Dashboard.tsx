@@ -252,11 +252,11 @@ export function Dashboard() {
                 <div className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
               </div>
             )}
-              <Card className="flex items-center justify-between border border-kavach-500/25 p-4 transition-colors hover:border-kavach-500/60 hover:bg-kavach-950/40">
+              <Card className="flex items-center justify-between border border-kavach-500/25 p-4 transition-colors hover:border-kavach-500/60 hover:bg-kavach-500/10 dark:hover:bg-kavach-950/20">
                 <div className="flex min-w-0 items-center gap-3">
                   {isNote ? (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
-                      <StickyNote className="h-4 w-4 text-amber-400" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kavach-500/15">
+                      <StickyNote className="h-4 w-4 text-kavach-500" />
                     </div>
                   ) : (
                     <CredentialAvatar purpose={cred.purpose} />
@@ -281,7 +281,7 @@ export function Dashboard() {
                       <p className="truncate text-xs italic text-zinc-500">{cred.notes}</p>
                     )}
                     {isNote && (
-                      <p className="text-xs text-amber-400/70">Secure note</p>
+                      <p className="text-xs text-kavach-500/70">Secure note</p>
                     )}
                     {(cred.tags ?? []).length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
