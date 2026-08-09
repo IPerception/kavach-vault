@@ -202,17 +202,59 @@ Every phase ships with its tests. No deferred testing. Backend: JUnit 5 + Mockit
 
 ## Completed Features
 
+Current release: **v1.3.0**.
+
+### Released in v1.0.0 - v1.1.0
+
 - **Distribution Landing Page** -- GitHub Pages site at docs/index.html, plain HTML + Tailwind CDN. Released in v1.0.0.
 - **Backup to User-Chosen Location** -- BackupService + BackupController + Settings modal. Destination stored in ~/.kavach/backup-destination.txt. Released in v1.1.0.
 - **Localhost HTTPS** -- Self-signed PKCS12 cert generated on first launch via Bouncy Castle, stored in ~/.kavach/kavach.p12. Password unique per install (timestamp-based) stored in ~/.kavach/tls.key. SslPropertyCleaner wipes SSL system properties after Tomcat starts. Released in v1.1.0.
 
+### Released in v1.2.0
+
+- **Credential tags** -- `TagInput.tsx`, filter bar on the dashboard.
+- **Secure notes** -- note-type credentials with their own add/edit screens.
+- **Favourites** -- star toggle, `PUT /api/credentials/{id}/favourite`.
+- **Password generator presets** -- `PasswordGenerator.tsx` + `usePasswordGenerator`.
+- **Password strength meter** -- `PasswordStrengthMeter.tsx`.
+- **Breach check** -- `HibpService` (HaveIBeenPwned k-anonymity range API).
+- **Password expiry reminders** -- `ExpiryBanner.tsx` + `useExpiryCheck`.
+- **Light/dark mode toggle**.
+- **Auto-update notification** -- `useUpdateCheck.ts` + `UpdateBanner.tsx`. Polls the
+  GitHub releases API on load and shows a dismissible banner. Notification only, no
+  auto-install.
+- **TOTP reveal flow** -- replaced the email OTP reveal with an authenticator app. See
+  the TOTP Reveal Flow section above.
+
+### Released in v1.3.0
+
+- **CSV import** -- `CsvImportService` + `POST /api/credentials/import-csv`. Chrome,
+  LastPass and Bitwarden formats.
+- **Keyboard shortcuts** -- Ctrl+K search, N new credential, Escape clear search.
+- **Light mode contrast fix** -- all five themes shift their palette darker in light mode.
+- **Theme-aware note icons** and consistent Add/Edit form headers.
+- **Frontend tests wired into the Maven build** (`vitest --run`).
+
 ## Planned Features (in priority order)
 
-### 1. Auto-Update Notification
-On startup, call `https://api.github.com/repos/IPerception/kavach-vault/releases/latest` and compare
-the tag name against the running version (`kavach.version` property). If a newer version exists,
-show a dismissible banner in the UI with a link to the releases page. No auto-install -- notification
-only. No backend change needed; purely a frontend hook on app load.
+### 1. Browser Extension
+Autofill in browser login forms. Treated as v2.0 scope: roughly 2-3 weeks standalone, and
+closer to a separate project than a feature.
+
+Shape: a content script detects login forms and shows a credential picker, filling only on
+an explicit click -- never auto-filling without confirmation. A background service worker
+fetches credentials filtered by domain match.
+
+Four problems to solve before any of that matters:
+1. **Auth.** The JWT is `httpOnly` + `SameSite=Strict`, so an extension background worker
+   cannot send it. Needs a dedicated long-lived extension API token and a backend endpoint
+   to register and issue one.
+2. **Self-signed cert.** `fetch()` from an extension to the local HTTPS port is rejected
+   unless the user has trusted the cert. May require a separate HTTP-only local endpoint
+   for extension use.
+3. **Form detection.** SPAs, dynamically rendered forms and iframes make reliable
+   detection genuinely hard.
+4. **Publishing.** Chrome Web Store ($5 one-off), Firefox Add-ons (free); both review.
 
 ### 2. macOS Build
 Run `mvn clean install -P native-installer` on a macOS machine. jpackage produces a `.dmg` by
@@ -222,3 +264,8 @@ ID certificate is required to avoid Gatekeeper blocking.
 ### 3. Linux Build
 Run `mvn clean install -P native-installer` on a Linux machine. jpackage produces a `.deb`
 (requires `dpkg-dev`) or `.rpm` (requires `rpm-build`). Attach to GitHub release accordingly.
+
+## Dropped
+
+- **Per-credential TOTP storage** -- dropped 2026-05-30. Storing a credential's password
+  and its TOTP secret in the same vault defeats the point of the second factor.
