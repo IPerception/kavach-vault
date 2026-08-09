@@ -1,0 +1,84 @@
+# Dependency updates, grouped so they arrive as a few reviewable PRs.
+#
+# Grouping is the whole point of this file. Alerts were switched on with 25
+# already open, all of them in the frontend lockfile, and ungrouped that is 25
+# separate pull requests against a repo with no other traffic.
+#
+# The non-obvious part: `groups` applies to version updates ONLY unless you say
+# otherwise. Security PRs — the ones the 25 open alerts will generate — need an
+# explicit `applies-to: security-updates`, or they arrive one per advisory no
+# matter what is configured below.
+version: 2
+updates:
+  # ---- frontend (npm) ------------------------------------------------
+  # Every current alert lives here. Production and development are split
+  # because they warrant different reading: a CVE in something that ships to
+  # users is a different question from one in the test runner. The lone
+  # critical so far is vitest, which only bites while its UI server is
+  # listening on a developer's machine.
+  - package-ecosystem: "npm"
+    directory: "/kavach-frontend"
+    schedule:
+      interval: "monthly"
+    groups:
+      npm-production-security:
+        applies-to: security-updates
+        dependency-type: "production"
+        patterns: ["*"]
+      npm-development-security:
+        applies-to: security-updates
+        dependency-type: "development"
+        patterns: ["*"]
+      npm-production:
+        applies-to: version-updates
+        dependency-type: "production"
+        patterns: ["*"]
+      npm-development:
+        applies-to: version-updates
+        dependency-type: "development"
+        patterns: ["*"]
+    commit-message:
+      prefix: "Bump"
+
+  # ---- backend and build (maven) -------------------------------------
+  # Three poms, all worth watching for different reasons:
+  #   /                  aggregator: no dependencies, but it pins
+  #                      spring-boot-starter-parent, which Dependabot updates,
+  #                      and holds the <properties> versions the backend reads
+  #   /kavach-backend    the real tree — 21 dependencies, 5 plugins
+  #   /kavach-frontend   no dependencies, but frontend-maven-plugin and friends
+  #
+  # Caveat to expect rather than be surprised by: a version declared as
+  # ${foo.version} in the backend but *defined* in the root pom is the case
+  # Dependabot handles least reliably. If a backend bump ever looks like it was
+  # skipped, that is the first thing to check by hand.
+  - package-ecosystem: "maven"
+    directories:
+      - "/"
+      - "/kavach-backend"
+      - "/kavach-frontend"
+    schedule:
+      interval: "monthly"
+    groups:
+      maven-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      maven:
+        applies-to: version-updates
+        patterns: ["*"]
+    commit-message:
+      prefix: "Bump"
+
+  # ---- CI --------------------------------------------------------------
+  # No workflows in the repo today, so this sits idle. It costs nothing and
+  # means the first workflow added is watched from the day it lands, rather
+  # than whenever someone remembers this file exists.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "Bump"
