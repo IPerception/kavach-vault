@@ -5,7 +5,7 @@
 # separate pull requests against a repo with no other traffic.
 #
 # The non-obvious part: `groups` applies to version updates ONLY unless you say
-# otherwise. Security PRs — the ones the 25 open alerts will generate — need an
+# otherwise. Security PRs (the ones the 25 open alerts will generate) need an
 # explicit `applies-to: security-updates`, or they arrive one per advisory no
 # matter what is configured below.
 version: 2
@@ -45,7 +45,7 @@ updates:
   #   /                  aggregator: no dependencies, but it pins
   #                      spring-boot-starter-parent, which Dependabot updates,
   #                      and holds the <properties> versions the backend reads
-  #   /kavach-backend    the real tree — 21 dependencies, 5 plugins
+  #   /kavach-backend    the real tree: 21 dependencies, 5 plugins
   #   /kavach-frontend   no dependencies, but frontend-maven-plugin and friends
   #
   # Caveat to expect rather than be surprised by: a version declared as
