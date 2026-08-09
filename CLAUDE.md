@@ -37,7 +37,29 @@ cd kavach-frontend && npx vitest run src/hooks/useOtpFlow.test.ts
 
 The launcher script (`start.bat` / `start.sh`) tries ports 8080 → 8090 → 8100 on conflict and auto-backs up `kavach.db` on startup (retains last 5 copies).
 
+## Contributing Workflow
+
+Every change goes on a branch and lands via pull request. Do not commit directly to
+`main`, including for one-file or config-only changes.
+
+```bash
+git checkout -b <topic>
+# make changes, then verify before committing
+mvn test -pl kavach-backend
+cd kavach-frontend && npm run test:run && npm run build
+
+git add <files>
+git commit -m "..."
+git push -u origin <topic>
+gh pr create --fill
+```
+
+Verify before committing, not after. Only the merge to `main` is done by the repo owner.
+
 ## Releasing
+
+Releases are cut from `main` after the change PRs have merged. Tags are the one thing
+pushed to `main` directly - a tag is not a change to the tree.
 
 ```bash
 # 1. Build the app-image (from project root)
@@ -47,9 +69,9 @@ mvn clean install -P native-installer
 # 3. Zip dist/Kavach/ manually via File Explorer -> right-click -> Compress to ZIP
 #    Name it: Kavach-vX.Y.Z-windows-x64.zip
 
-# 4. Commit all changes, then tag and push
+# 4. With all change PRs merged, tag main and push the tag
+git checkout main && git pull
 git tag vX.Y.Z
-git push origin main
 git push origin vX.Y.Z
 
 # 5. Create GitHub release with the zip as a release asset
@@ -169,6 +191,10 @@ SMTP credentials and port config live in `app_config` (encrypted with master key
 - TOTP validation uses the samstevens library via `TotpService.isValidCode()` — never compare TOTP codes with `String.equals()`.
 - DEK re-encryption on master password change must be a single `@Transactional` method covering all credentials.
 - Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'`.
+- Dependabot owns dependency versions declared in a manifest. It does NOT own Spring Boot
+  BOM property overrides in the root `pom.xml` - those are maintained by hand. The
+  `commons-lang3.version` pin is one; read the comment above it before touching it, and
+  re-check every such override when upgrading Spring Boot.
 
 ## Testing Rule
 
