@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -28,8 +28,8 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <jjwt.version>0.13.0</jjwt.version>
         <bucket4j.version>8.10.1</bucket4j.version>
-        <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
-        <springdoc.version>3.1.0</springdoc.version>
+        <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
+        <springdoc.version>3.1.1</springdoc.version>
         <!--
             Overrides the commons-lang3 version that spring-boot-dependencies applies to
             any transitive use. commons-lang3 is not declared in any of our poms, so this
@@ -47,6 +47,6 @@
             start pinning us *below* what Boot ships.
         -->
         <commons-lang3.version>3.20.0</commons-lang3.version>
-        <bouncycastle.version>1.85</bouncycastle.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
     </properties>
 </project>
