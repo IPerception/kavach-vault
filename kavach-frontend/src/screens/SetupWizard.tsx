@@ -85,7 +85,7 @@ export function SetupWizard() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-3xl overflow-hidden !p-0">
+      <Card className="w-full max-w-3xl overflow-hidden p-0!">
         <div className="flex h-[540px]">
           {/* Left column - logo panel */}
           <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
@@ -175,7 +175,7 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-3xl overflow-hidden !p-0">
+      <Card className="w-full max-w-3xl overflow-hidden p-0!">
         <div className="flex h-[480px]">
           {/* Left column - logo panel */}
           <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
@@ -190,7 +190,7 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
           <div className="relative flex flex-1 flex-col justify-center overflow-y-auto p-8">
             <button
               onClick={onReset}
-              className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+              className="absolute right-3 top-3 rounded-sm p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
               aria-label="Refresh QR code"
             >
               <RefreshCw className="h-4 w-4" />
@@ -213,12 +213,12 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
 
               <details className="w-full text-xs text-zinc-500">
                 <summary className="cursor-pointer select-none">Can't scan? Enter manually</summary>
-                <div className="mt-2 rounded bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
+                <div className="mt-2 rounded-sm bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
                   <div className="mb-1 flex items-center gap-1 text-zinc-500">
                     <span>Secret key</span>
                     <div className="group relative">
                       <Info className="h-3 w-3 cursor-help" />
-                      <div className="absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 rounded bg-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow-lg group-hover:block">
+                      <div className="absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 rounded-sm bg-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow-lg group-hover:block">
                         A shared key between Kavach and your authenticator app. It generates the same time-based codes as the QR code above. Keep it private.
                       </div>
                     </div>

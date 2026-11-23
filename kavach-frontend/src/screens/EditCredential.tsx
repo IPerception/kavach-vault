@@ -121,7 +121,7 @@ export function EditCredential() {
         <Dialog.Root open={pendingPassword !== null} onOpenChange={(open) => { if (!open) setPendingPassword(null) }}>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-hidden dark:border-zinc-700 dark:bg-zinc-900">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/10">
                   <RefreshCw className="h-5 w-5 text-kavach-500" />
@@ -138,7 +138,7 @@ export function EditCredential() {
               <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
                 The generated password will replace the current password field:
               </p>
-              <p className="mb-5 break-all rounded bg-zinc-100 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              <p className="mb-5 break-all rounded-sm bg-zinc-100 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
                 {pendingPassword}
               </p>
               <div className="flex justify-end gap-3">
@@ -173,7 +173,7 @@ export function EditCredential() {
           <textarea
             id="notes"
             rows={3}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             {...register('notes')}
           />
         </div>

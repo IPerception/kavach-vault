@@ -13,7 +13,7 @@ export function ClipboardCopy({ text, label = 'Copy' }: ClipboardCopyProps) {
     <button
       type="button"
       onClick={() => copy(text)}
-      className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
+      className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-hidden
         ${copied
           ? 'bg-green-500/15 text-green-400'
           : 'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'

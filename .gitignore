@@ -39,3 +39,6 @@ identifier.sqlite
 # OS
 .DS_Store
 Thumbs.db
+
+# Scratch working notes (plans, research). The rest of docs/ is tracked.
+docs/notes/

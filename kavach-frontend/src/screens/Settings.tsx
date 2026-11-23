@@ -294,7 +294,7 @@ export function Settings() {
   return (
     <>
       {/* Settings list */}
-      <Card className="max-w-lg !p-0">
+      <Card className="max-w-lg p-0!">
         <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
           {settingsItems.map((item) => (
             <li key={item.key}>
@@ -337,7 +337,7 @@ export function Settings() {
           onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
         >
           <Card
-            className="w-full max-w-3xl overflow-hidden !p-0"
+            className="w-full max-w-3xl overflow-hidden p-0!"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex h-[540px]">
@@ -354,7 +354,7 @@ export function Settings() {
               <div className="relative flex flex-1 flex-col justify-center overflow-y-auto p-8">
                 <button
                   onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
-                  className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                  className="absolute right-3 top-3 rounded-sm p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -452,12 +452,12 @@ export function Settings() {
                         </div>
                         <details className="text-xs text-zinc-500">
                           <summary className="cursor-pointer select-none">Can't scan? Enter manually</summary>
-                          <div className="mt-2 rounded bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
+                          <div className="mt-2 rounded-sm bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
                             <div className="mb-1 flex items-center gap-1 text-zinc-500">
                               <span>Secret key</span>
                               <div className="group relative">
                                 <Info className="h-3 w-3 cursor-help" />
-                                <div className="absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 rounded bg-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow-lg group-hover:block">
+                                <div className="absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 rounded-sm bg-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow-lg group-hover:block">
                                   A shared key between Kavach and your authenticator app. It generates
                                   the same time-based codes as the QR code above. Keep it private.
                                 </div>
@@ -633,7 +633,7 @@ export function Settings() {
                         <select
                           value={expiryDays}
                           onChange={(e) => setExpiryDaysState(Number(e.target.value))}
-                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                         >
                           <option value={60}>60 days</option>
                           <option value={90}>90 days (default)</option>
@@ -649,7 +649,7 @@ export function Settings() {
                         <select
                           value={warningDays}
                           onChange={(e) => setWarningDaysState(Number(e.target.value))}
-                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                         >
                           <option value={7}>7 days before</option>
                           <option value={14}>14 days before (default)</option>
