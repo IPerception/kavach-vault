@@ -10,6 +10,21 @@ import java.nio.file.Paths;
 @SpringBootApplication
 public class KavachApplication {
 
+    /*
+     * Kavach's only outbound calls are the breach check and the update check.
+     * Liquibase OSS >= 4.30 sends anonymous
+     * usage analytics on every migration run by default, and neither Liquibase
+     * nor Spring Boot offers an application property to turn that off (see
+     * spring-projects/spring-boot#43067), so it is disabled via the system
+     * property Liquibase reads at use time.
+     *
+     * A static block rather than a line in main(): @SpringBootTest contexts load
+     * this class without calling main(), and they run Liquibase too.
+     */
+    static {
+        System.setProperty("liquibase.analytics.enabled", "false");
+    }
+
     public static void main(String[] args) throws Exception {
         String dataDir = System.getProperty("kavach.data.dir",
                 Paths.get(System.getProperty("user.home"), ".kavach").toString());

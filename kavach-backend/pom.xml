@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.kavach</groupId>
         <artifactId>kavach</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </parent>
 
     <artifactId>kavach-backend</artifactId>
@@ -269,7 +269,7 @@
                                         <argument>--name</argument>
                                         <argument>Kavach</argument>
                                         <argument>--app-version</argument>
-                                        <argument>1.3.0</argument>
+                                        <argument>${project.version}</argument>
                                         <argument>--description</argument>
                                         <argument>Local-first personal password manager</argument>
                                         <argument>--vendor</argument>
@@ -284,14 +284,39 @@
                                         <argument>--type</argument>
                                         <argument>${jpackage.type}</argument>
 
-                                        <!-- Include all JDK modules: Spring Boot fat jars are
-                                             non-modular so jlink cannot infer the module set. -->
+                                        <!-- Explicit runtime module set. Spring Boot fat jars are
+                                             non-modular, so jlink cannot infer it.
+
+                                             Not ALL-MODULE-PATH: JDK 24+ builds such as Temurin 25
+                                             ship without jmods/ (JEP 493 linkable runtime) and then
+                                             refuse to link jdk.jlink into an image, failing with
+                                             "This JDK does not contain packaged modules". Listing
+                                             modules also keeps compiler, jshell, jlink and debugger
+                                             tooling out of the shipped runtime.
+
+                                             java.se = every java.* module (desktop/tray, sql,
+                                             net.http for the breach check, naming, management...).
+                                             The jdk.* entries are runtime services that libraries
+                                             reach reflectively or via ServiceLoader: Unsafe
+                                             (jdk.unsupported), TLS/crypto providers, charsets and
+                                             locales, DNS. All are cross-platform, so the same list
+                                             works for the planned macOS/Linux builds. If a new
+                                             dependency fails only in the packaged app with
+                                             ClassNotFoundException/NoClassDefFoundError for a jdk.*
+                                             class, add its module here. -->
                                         <argument>--add-modules</argument>
-                                        <argument>ALL-MODULE-PATH</argument>
+                                        <argument>java.se,jdk.unsupported,jdk.unsupported.desktop,jdk.accessibility,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.security.auth,jdk.security.jgss,jdk.charsets,jdk.localedata,jdk.zipfs,jdk.naming.dns,jdk.net,jdk.management</argument>
 
                                         <!-- JVM tuning passed through to the bundled JRE -->
                                         <argument>--java-options</argument>
                                         <argument>-Xmx256m</argument>
+
+                                        <!-- sqlite-jdbc loads a native library. On JDK 24+ that
+                                             prints a "restricted method" warning (JEP 472) to the
+                                             console on every launch; this grants it explicitly.
+                                             Also accepted (and harmless) on JDK 21. -->
+                                        <argument>--java-options</argument>
+                                        <argument>--enable-native-access=ALL-UNNAMED</argument>
 
                                         <!-- Data dir and datasource URL are derived at runtime in KavachApplication.main()
                                              from user.home, so they work correctly on any machine. Do not pass them
