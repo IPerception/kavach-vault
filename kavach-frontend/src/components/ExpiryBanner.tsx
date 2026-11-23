@@ -42,7 +42,7 @@ export function ExpiryBanner() {
         type="button"
         aria-label="Dismiss expiry notification"
         onClick={() => setDismissed(true)}
-        className={`shrink-0 rounded p-0.5 hover:opacity-80 ${
+        className={`shrink-0 rounded-sm p-0.5 hover:opacity-80 ${
           isUrgent ? 'text-red-400 hover:bg-red-500/20' : 'text-amber-400 hover:bg-amber-500/20'
         }`}
       >

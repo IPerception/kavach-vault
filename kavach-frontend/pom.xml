@@ -26,7 +26,7 @@
                 <version>2.0.2</version>
                 <configuration>
                     <workingDirectory>${project.basedir}</workingDirectory>
-                    <nodeVersion>v20.17.0</nodeVersion>
+                    <nodeVersion>v24.22.3</nodeVersion>
                 </configuration>
                 <executions>
                     <execution>

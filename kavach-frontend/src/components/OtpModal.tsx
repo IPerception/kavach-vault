@@ -28,7 +28,7 @@ export function OtpModal({ credentialId, purpose, credentialType = 'PASSWORD', c
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-none dark:border-zinc-700 dark:bg-zinc-900"
+          className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-hidden dark:border-zinc-700 dark:bg-zinc-900"
           onEscapeKeyDown={reset}
           onInteractOutside={reset}
         >
@@ -87,7 +87,7 @@ export function OtpModal({ credentialId, purpose, credentialType = 'PASSWORD', c
           {state === 'revealed' && password && (
             <div className="space-y-3">
               {isNote ? (
-                <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-zinc-200 bg-zinc-50 p-3 font-mono text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap wrap-break-word rounded-lg border border-zinc-200 bg-zinc-50 p-3 font-mono text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
                   {password}
                 </pre>
               ) : (

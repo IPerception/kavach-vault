@@ -40,7 +40,7 @@ export function UpdateBanner({ version }: Props) {
         type="button"
         aria-label="Dismiss update notification"
         onClick={dismiss}
-        className="shrink-0 rounded p-0.5 text-kavach-400 hover:bg-kavach-500/20 hover:text-kavach-200"
+        className="shrink-0 rounded-sm p-0.5 text-kavach-400 hover:bg-kavach-500/20 hover:text-kavach-200"
       >
         <X className="h-3.5 w-3.5" />
       </button>

@@ -42,7 +42,7 @@ export function Layout() {
                 >
                   {colorMode === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
-                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
+                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded-sm bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
                   {colorMode === 'dark' ? 'Light mode' : 'Dark mode'}
                 </div>
               </div>
@@ -50,7 +50,7 @@ export function Layout() {
                 <Button variant="ghost" size="sm" onClick={lock}>
                   <LockKeyhole className="h-4 w-4" />
                 </Button>
-                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
+                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded-sm bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
                   Lock vault
                 </div>
               </div>
@@ -58,7 +58,7 @@ export function Layout() {
                 <Button variant="ghost" size="sm" onClick={doLogout}>
                   <DoorOpen className="h-4 w-4" />
                 </Button>
-                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
+                <div className="pointer-events-none absolute right-0 top-full mt-2 hidden rounded-sm bg-zinc-700 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block whitespace-nowrap">
                   Sign out
                 </div>
               </div>

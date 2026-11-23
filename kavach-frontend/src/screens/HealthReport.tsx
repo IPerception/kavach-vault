@@ -82,7 +82,7 @@ export function HealthReport() {
           </Dialog.Trigger>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-hidden dark:border-zinc-700 dark:bg-zinc-900">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
                   <Wifi className="h-5 w-5 text-orange-400" />
@@ -211,7 +211,7 @@ function CredentialRow({ item, breach }: { item: CredentialHealth; breach?: Brea
         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.purpose}</p>
         <div className="flex flex-wrap gap-1.5">
           <span
-            className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
+            className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-medium ${
               STRENGTH_COLOR[item.strengthScore]
             }`}
           >
@@ -222,13 +222,13 @@ function CredentialRow({ item, breach }: { item: CredentialHealth; breach?: Brea
             .map((t) => (
               <span
                 key={t.label}
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${t.className}`}
+                className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-medium ${t.className}`}
               >
                 {t.label}
               </span>
             ))}
           {breach?.breached && (
-            <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-orange-400 bg-orange-500/10">
+            <span className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs font-medium text-orange-400 bg-orange-500/10">
               <Flame className="h-3 w-3" />
               Breached{breach.count > 0 ? ` (${breach.count.toLocaleString()}x)` : ''}
             </span>
