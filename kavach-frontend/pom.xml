@@ -19,6 +19,12 @@
             <!--
                 Downloads Node + npm once into kavach-frontend/node/ then runs
                 npm ci and npm run build. The node/ dir is gitignored.
+
+                After changing nodeVersion, delete kavach-frontend/node/ before the
+                next build. The plugin unpacks the new npm over the old one without
+                clearing it, and the mix fails with "npm error Class extends value
+                undefined is not a constructor or null" (hit on the Node 20 -> 24 bump).
+                Fresh checkouts and CI are unaffected.
             -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
