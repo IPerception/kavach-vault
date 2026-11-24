@@ -14,4 +14,5 @@ public class CredentialHealthDto {
     private String strengthLabel;
     private boolean duplicate;
     private LocalDateTime updatedAt;
+    private LocalDateTime passwordChangedAt;
 }

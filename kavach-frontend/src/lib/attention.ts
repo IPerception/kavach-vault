@@ -11,12 +11,11 @@ export function strengthBucket(score: number): StrengthBucket {
 
 /**
  * The date a password's age is measured from. EVERY staleness check must read it through
- * this function. Today it is updatedAt, which also moves when only the username, URL or
- * tags change. The backend PR that adds credential.password_changed_at switches this one
- * line to c.passwordChangedAt.
+ * this function. passwordChangedAt moves only when the password itself changes (not when
+ * the username, URL or tags do); updatedAt is the fallback for responses that lack it.
  */
-export function passwordAgeDate(c: { updatedAt: string }): string {
-  return c.updatedAt
+export function passwordAgeDate(c: { updatedAt: string; passwordChangedAt?: string | null }): string {
+  return c.passwordChangedAt ?? c.updatedAt
 }
 
 export function daysSince(iso: string, now: number = Date.now()): number {

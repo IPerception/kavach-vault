@@ -9,6 +9,7 @@ import com.kavach.domain.Credential;
 import com.kavach.domain.VaultUser;
 import com.kavach.dto.CredentialSummaryDto;
 import com.kavach.dto.request.CreateCredentialRequest;
+import com.kavach.dto.request.CreateNoteRequest;
 import com.kavach.dto.request.ImportRequest;
 import com.kavach.dto.request.UpdateCredentialRequest;
 import com.kavach.event.AuditEvent;
@@ -140,6 +141,36 @@ class CredentialServiceTest {
         assertThat(event.user()).isEqualTo(testUser);
     }
 
+    @Test
+    void create_setsPasswordChangedAt() {
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(sessionKeyStore.getKey()).thenReturn(masterKey);
+        when(encryptionService.generateDek()).thenReturn(new byte[32]);
+        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[60]);
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Gmail").build());
+
+        credentialService.create(new CreateCredentialRequest("Gmail", "alice", "pw", "", "", null), "alice");
+
+        verify(credentialRepository).save(argThat(c -> c.getPasswordChangedAt() != null));
+    }
+
+    @Test
+    void createNote_setsPasswordChangedAt() {
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(sessionKeyStore.getKey()).thenReturn(masterKey);
+        when(encryptionService.generateDek()).thenReturn(new byte[32]);
+        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[60]);
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Note").build());
+
+        credentialService.createNote(new CreateNoteRequest("Note", "body", null), "alice");
+
+        verify(credentialRepository).save(argThat(c -> c.getPasswordChangedAt() != null));
+    }
+
     // --- list ---
 
     @Test
@@ -239,6 +270,83 @@ class CredentialServiceTest {
         verify(eventPublisher).publishEvent(captor.capture());
         AuditEvent event = (AuditEvent) captor.getValue();
         assertThat(event.action()).isEqualTo(AuditAction.UPDATE);
+    }
+
+    @Test
+    void update_differentPassword_setsPasswordChangedAt() {
+        LocalDateTime longAgo = LocalDateTime.now().minusDays(120);
+        Credential existing = buildCredential(1L, "Gmail");
+        existing.setPasswordChangedAt(longAgo);
+        stubUpdate(existing, "oldPw");
+
+        credentialService.update(1L, new UpdateCredentialRequest("alice", "newPw", "", "", null), "alice");
+
+        verify(credentialRepository).save(argThat(c ->
+                c.getPasswordChangedAt() != null && c.getPasswordChangedAt().isAfter(longAgo)));
+    }
+
+    @Test
+    void update_samePassword_leavesPasswordChangedAt() {
+        LocalDateTime longAgo = LocalDateTime.now().minusDays(120);
+        Credential existing = buildCredential(1L, "Gmail");
+        existing.setPasswordChangedAt(longAgo);
+        stubUpdate(existing, "samePw");
+
+        credentialService.update(1L, new UpdateCredentialRequest("alice", "samePw", "", "", null), "alice");
+
+        verify(credentialRepository).save(argThat(c -> longAgo.equals(c.getPasswordChangedAt())));
+        // Still re-encrypted under a fresh DEK, as before.
+        verify(encryptionService, times(2)).encrypt(any(), any());
+    }
+
+    @Test
+    void update_blankPassword_leavesPasswordChangedAt() {
+        LocalDateTime longAgo = LocalDateTime.now().minusDays(120);
+        Credential existing = buildCredential(1L, "Gmail");
+        existing.setPasswordChangedAt(longAgo);
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(credentialRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Gmail").build());
+
+        credentialService.update(1L, new UpdateCredentialRequest("alice", "", "", "", null), "alice");
+
+        verify(credentialRepository).save(argThat(c -> longAgo.equals(c.getPasswordChangedAt())));
+        verify(encryptionService, never()).decrypt(any(), any());
+    }
+
+    @Test
+    void update_metadataOnly_leavesPasswordChangedAtButBumpsUpdatedAt() {
+        LocalDateTime longAgo = LocalDateTime.now().minusDays(120);
+        Credential existing = buildCredential(1L, "Gmail");
+        existing.setPasswordChangedAt(longAgo);
+        existing.setUpdatedAt(longAgo);
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(credentialRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Gmail").build());
+
+        credentialService.update(1L, new UpdateCredentialRequest("newUser", null, "https://x.test", "", null), "alice");
+
+        verify(credentialRepository).save(argThat(c ->
+                longAgo.equals(c.getPasswordChangedAt()) && c.getUpdatedAt().isAfter(longAgo)));
+    }
+
+    private void stubUpdate(Credential existing, String storedPassword) {
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(credentialRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(sessionKeyStore.getKey()).thenReturn(masterKey);
+        when(encryptionService.decrypt(any(), any()))
+                .thenReturn(new byte[32])                                     // DEK
+                .thenReturn(storedPassword.getBytes(StandardCharsets.UTF_8)); // current password
+        when(encryptionService.bytesToKey(any())).thenReturn(masterKey);
+        when(encryptionService.generateDek()).thenReturn(new byte[32]);
+        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[60]);
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Gmail").build());
     }
 
     // --- toggleFavourite ---
@@ -398,6 +506,25 @@ class CredentialServiceTest {
     }
 
     @Test
+    void importVault_validPayload_setsPasswordChangedAtOnImportedCredential() throws Exception {
+        String json = "[{\"purpose\":\"Gmail\",\"username\":\"alice\",\"password\":\"pw\"}]";
+        ImportRequest request = buildImportRequest(1, Base64.getEncoder().encodeToString(new byte[60]));
+
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(sessionKeyStore.getKey()).thenReturn(masterKey);
+        when(encryptionService.decrypt(any(), any())).thenReturn(json.getBytes(StandardCharsets.UTF_8));
+        when(encryptionService.generateDek()).thenReturn(new byte[32]);
+        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[60]);
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Gmail").build());
+
+        credentialService.importVault(request, "alice");
+
+        verify(credentialRepository).save(argThat(c -> c.getPasswordChangedAt() != null));
+    }
+
+    @Test
     void importVault_duplicateCredential_skipsAndCounts() throws Exception {
         String json = "[{\"purpose\":\"Gmail\",\"username\":\"alice\",\"password\":\"pw\",\"url\":\"\",\"notes\":\"\"}]";
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
@@ -529,6 +656,28 @@ class CredentialServiceTest {
         var report = credentialService.healthReport("alice");
 
         assertThat(report.get(0).getUpdatedAt()).isEqualTo(updatedAt);
+    }
+
+    @Test
+    void healthReport_includesPasswordChangedAt() {
+        LocalDateTime changed = LocalDateTime.of(2024, 3, 1, 9, 0);
+        LocalDateTime updated = LocalDateTime.of(2025, 1, 1, 12, 0);
+        Credential cred = Credential.builder()
+                .id(1L).user(testUser).purpose("Gmail").username("alice")
+                .encryptedPassword(new byte[60]).dekEncrypted(new byte[60])
+                .createdAt(changed).updatedAt(updated).passwordChangedAt(changed).build();
+
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(sessionKeyStore.getKey()).thenReturn(masterKey);
+        when(credentialRepository.findAllByUser(testUser)).thenReturn(List.of(cred));
+        when(encryptionService.decrypt(any(), any()))
+                .thenReturn(new byte[32]).thenReturn("pw".getBytes());
+        when(encryptionService.bytesToKey(any())).thenReturn(masterKey);
+
+        var report = credentialService.healthReport("alice");
+
+        assertThat(report.get(0).getPasswordChangedAt()).isEqualTo(changed);
+        assertThat(report.get(0).getUpdatedAt()).isEqualTo(updated);
     }
 
     private Credential buildCredential(Long id, String purpose) {

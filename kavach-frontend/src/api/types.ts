@@ -13,6 +13,7 @@ export interface CredentialSummary {
   favourite?: boolean
   createdAt: string
   updatedAt: string
+  passwordChangedAt?: string | null
 }
 
 export interface RevealResponse {
@@ -48,6 +49,7 @@ export interface CredentialHealth {
   strengthLabel: string
   duplicate: boolean
   updatedAt: string
+  passwordChangedAt?: string | null
 }
 
 export interface VaultExport {

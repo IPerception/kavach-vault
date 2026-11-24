@@ -37,6 +37,20 @@ class CredentialMapperTest {
     }
 
     @Test
+    void toSummaryDto_mapsPasswordChangedAt() {
+        LocalDateTime changed = LocalDateTime.of(2026, 1, 1, 12, 0);
+        CredentialSummaryDto dto = mapper.toSummaryDto(Credential.builder()
+                .purpose("Test").username("test")
+                .encryptedPassword(new byte[]{1}).dekEncrypted(new byte[]{1})
+                .createdAt(changed).updatedAt(changed.plusDays(5))
+                .passwordChangedAt(changed)
+                .build());
+
+        assertThat(dto.getPasswordChangedAt()).isEqualTo(changed);
+        assertThat(dto.getUpdatedAt()).isEqualTo(changed.plusDays(5));
+    }
+
+    @Test
     void toSummaryDto_doesNotExposeEncryptedFields() {
         // CredentialSummaryDto must not have encryptedPassword or dekEncrypted fields.
         // If a developer accidentally adds them, this test will fail to compile.

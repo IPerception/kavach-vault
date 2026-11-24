@@ -188,6 +188,33 @@ class AuthServiceTest {
         verify(sessionKeyStore).storeKey(any());
     }
 
+    @Test
+    void changePassword_leavesPasswordChangedAtAndUpdatedAtUntouched() {
+        VaultUser user = buildUser();
+        LocalDateTime changed = LocalDateTime.of(2025, 1, 1, 12, 0);
+        LocalDateTime updated = LocalDateTime.of(2025, 6, 1, 12, 0);
+        Credential credential = Credential.builder()
+                .id(1L).user(user).purpose("Gmail").username("alice")
+                .encryptedPassword(new byte[60]).dekEncrypted(new byte[60])
+                .createdAt(changed).updatedAt(updated).passwordChangedAt(changed).build();
+
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("Password1!", "$2a$hashed")).thenReturn(true);
+        when(keyDerivationService.deriveKey(eq("Password1!"), any())).thenReturn(new byte[32]);
+        when(keyDerivationService.generateSalt()).thenReturn(new byte[16]);
+        when(keyDerivationService.deriveKey(eq("NewPass1!"), any())).thenReturn(new byte[32]);
+        when(credentialRepository.findAllByUser(user)).thenReturn(List.of(credential));
+        when(encryptionService.decrypt(any(), any())).thenReturn(new byte[32]);
+        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[60]);
+        when(passwordEncoder.encode("NewPass1!")).thenReturn("$2a$newhashed");
+
+        authService.changePassword(new ChangePasswordRequest("Password1!", "NewPass1!"), "alice");
+
+        // A master-password change re-encrypts DEKs but changes no stored password.
+        assertThat(credential.getPasswordChangedAt()).isEqualTo(changed);
+        assertThat(credential.getUpdatedAt()).isEqualTo(updated);
+    }
+
     private VaultUser buildUser() {
         return VaultUser.builder()
                 .id(1L).username("alice")

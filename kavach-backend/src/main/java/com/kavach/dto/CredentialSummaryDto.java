@@ -26,4 +26,5 @@ public class CredentialSummaryDto {
     private final boolean favourite;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+    private final LocalDateTime passwordChangedAt;
 }

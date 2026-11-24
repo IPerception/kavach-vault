@@ -26,6 +26,7 @@ public interface CredentialMapper {
     @Mapping(target = "favourite", source = "favourite")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
+    @Mapping(target = "passwordChangedAt", source = "passwordChangedAt")
     CredentialSummaryDto toSummaryDto(Credential credential);
 
     List<CredentialSummaryDto> toSummaryDtoList(List<Credential> credentials);

@@ -23,5 +23,6 @@
     <include file="db/changelog/006-add-tags.xml"/>
     <include file="db/changelog/007-add-credential-type.xml"/>
     <include file="db/changelog/008-add-favourite.xml"/>
+    <include file="db/changelog/009-add-password-changed-at.xml"/>
 
 </databaseChangeLog>
