@@ -202,7 +202,7 @@ Every phase ships with its tests. No deferred testing. Backend: JUnit 5 + Mockit
 
 ## Completed Features
 
-Current release: **v1.3.0**.
+Current release: **v1.3.1**.
 
 ### Released in v1.0.0 - v1.1.0
 
@@ -234,6 +234,24 @@ Current release: **v1.3.0**.
 - **Light mode contrast fix** -- all five themes shift their palette darker in light mode.
 - **Theme-aware note icons** and consistent Add/Edit form headers.
 - **Frontend tests wired into the Maven build** (`vitest --run`).
+
+### Released in v1.3.1
+
+Maintenance and security release; no new features.
+
+- **Liquibase analytics disabled** -- Liquibase OSS >= 4.30 phoned home on every
+  startup by default. Static block in `KavachApplication`, guarded by
+  `LiquibaseAnalyticsDisabledTest`.
+- **Spring Boot 4.1.3 + Java 25** -- Boot 3.5 / Spring 6.2 left OSS support on
+  2026-06-30. Liquibase 5 (FSL-1.1-ALv2, see `THIRD-PARTY-NOTICES.md`), Jackson 3,
+  Hibernate 7, Tomcat 11. The bundled runtime is an explicit 34-module jlink image.
+- **Version drift fixed** -- v1.3.0 shipped with package.json and the child-pom parents
+  at 1.2.0, so its update banner always offered 1.3.0. `VersionConsistencyTest` now
+  fails the build if the five version spots disagree.
+- **Frontend** -- Tailwind 4 (compat mode), React 19.3, Vite 8, Vitest 5; Node 24 in the
+  Maven build; all npm advisories cleared.
+- **CI and releases** -- `.github/workflows/ci.yml` builds and tests every PR;
+  `.github/workflows/release.yml` drafts a release from a `vX.Y.Z` tag.
 
 ## Planned Features (in priority order)
 
