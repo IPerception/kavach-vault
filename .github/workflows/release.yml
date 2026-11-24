@@ -1,0 +1,143 @@
+# Build a release when a version tag is pushed.
+#
+#   git checkout main && git pull
+#   git tag v1.3.1 && git push origin v1.3.1
+#
+# Produces a DRAFT GitHub release with:
+#   Kavach-vX.Y.Z-windows-x64.zip  jpackage app-image, bundled Java runtime
+#   kavach-vX.Y.Z.jar              plain jar, for people with Java 25 installed
+#   SHA256SUMS.txt                 checksums for both
+#
+# Draft on purpose: the in-app update banner reads releases/latest, which
+# ignores drafts. Users are only notified once you have downloaded the zip,
+# tried it, and pressed Publish.
+#
+# The bundled runtime is whatever Temurin 25 patch is current when this runs,
+# so a quarterly Java security refresh is just a new patch tag; nothing to
+# install locally.
+#
+# Two jobs so that only the step that writes the release holds a write token.
+# The build job also runs on PRs that change this file: packaging is tested
+# before merge, and the zip can be downloaded from the run's artifacts.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Windows app-image
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      java_runtime: ${{ steps.assets.outputs.java_runtime }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # needed to check the tag is on main
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Resolve version (tag must be on main and match the pom)
+        id: version
+        run: |
+          POM_VERSION=$(mvn -q -ntp help:evaluate -Dexpression=project.version -DforceStdout)
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              echo "::error::Tag $GITHUB_REF_NAME is not on main. Release only from merged code."
+              exit 1
+            fi
+            if [ "$POM_VERSION" != "$TAG_VERSION" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match the root pom version $POM_VERSION. Bump the version first."
+              exit 1
+            fi
+          fi
+          echo "version=$POM_VERSION" >> "$GITHUB_OUTPUT"
+
+      # Runs every test again (frontend and backend) before packaging.
+      - name: Build, test and package
+        run: mvn -B -ntp clean install -P native-installer
+
+      - name: Assemble release assets
+        id: assets
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          # Never ship runtime files left by a test launch.
+          rm -f dist/Kavach/kavach.port dist/Kavach/kavach.db*
+          JAVA_RUNTIME=$(grep '^JAVA_VERSION=' dist/Kavach/runtime/release | cut -d'"' -f2)
+          echo "java_runtime=$JAVA_RUNTIME" >> "$GITHUB_OUTPUT"
+
+          mkdir -p release
+          ZIP="release/Kavach-v${VERSION}-windows-x64.zip"
+          # Zip the Kavach folder itself, as the manual releases did.
+          pwsh -NoProfile -Command "Compress-Archive -Path dist/Kavach -DestinationPath '$ZIP'"
+          cp kavach-backend/target/kavach.jar "release/kavach-v${VERSION}.jar"
+          (cd release && sha256sum *.zip *.jar > SHA256SUMS.txt)
+          cat release/SHA256SUMS.txt
+          ls -la release
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-assets
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Create draft release
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the release and upload assets
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-assets
+          path: release
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          JAVA_RUNTIME: ${{ needs.build.outputs.java_runtime }}
+        run: |
+          cat > notes.md <<EOF
+          Bundled Java runtime: Temurin ${JAVA_RUNTIME}
+
+          **Windows:** download \`Kavach-v${VERSION}-windows-x64.zip\`, extract it, run \`Kavach\\Kavach.exe\`. No Java install needed.
+
+          **Any OS with Java 25:** \`java -jar kavach-v${VERSION}.jar\`
+
+          Verify downloads against \`SHA256SUMS.txt\`.
+          EOF
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --title "Kavach $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --generate-notes \
+            --verify-tag
