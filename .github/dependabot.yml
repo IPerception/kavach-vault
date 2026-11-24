@@ -9,8 +9,9 @@
 # explicit `applies-to: security-updates`, or they arrive one per advisory no
 # matter what is configured below.
 #
-# Majors are NOT grouped. The version-update groups below only take minor and
-# patch updates, so every major (React, Tailwind, Spring Boot, ...) arrives as
+# Majors are NOT grouped, except within the lockstep families listed in the
+# npm section. The catch-all version-update groups only take minor and
+# patch updates, so every other major (React, Tailwind, Spring Boot, ...) arrives as
 # its own PR and gets its own CI run. Grouped PRs #3, #4 and #5 carried
 # React 19, Tailwind 4, TypeScript 7 and Spring Boot 4 together, were merged
 # without a build, and broke main. Majors are ungrouped rather than
@@ -37,6 +38,24 @@ updates:
         applies-to: security-updates
         dependency-type: "development"
         patterns: ["*"]
+      # Lockstep families: packages whose peer dependencies pin each other, so
+      # bumping one alone always fails `npm ci` with ERESOLVE. They are grouped
+      # INCLUDING majors (no update-types), and listed before the catch-all
+      # groups because a dependency goes to the first group it matches.
+      # Found the hard way: vitest 5 and @vitest/coverage-v8 5 arrived as two
+      # PRs (#23, #24) and each failed CI for lack of the other.
+      vitest:
+        applies-to: version-updates
+        patterns: ["vitest", "@vitest/*"]
+      react:
+        applies-to: version-updates
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      vite:
+        applies-to: version-updates
+        patterns: ["vite", "@vitejs/*"]
+      tailwind:
+        applies-to: version-updates
+        patterns: ["tailwindcss", "@tailwindcss/*"]
       npm-production:
         applies-to: version-updates
         dependency-type: "production"
