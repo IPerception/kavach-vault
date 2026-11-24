@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getAuditLog } from '../api/auditLog'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { AUDIT_PAGE_SIZE, getAuditLog } from '../api/auditLog'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
-import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/Pagination'
 import type { BadgeVariant } from '../api/types'
 
 const ACTION_BADGE: Record<string, BadgeVariant> = {
@@ -20,67 +19,45 @@ export function AuditLog() {
   const { data, isLoading } = useQuery({
     queryKey: ['audit-log', page],
     queryFn: () => getAuditLog(page),
+    placeholderData: keepPreviousData,
   })
 
-  if (isLoading) return <p className="text-sm text-zinc-400">Loading...</p>
+  if (isLoading) return <p className="text-sm text-soft">Loading...</p>
 
   const entries = data?.content ?? []
-  const totalPages = data?.totalPages ?? 1
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
-        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Audit Log</h1>
-      </div>
-      <Card>
+      <h1 className="font-display text-xl font-semibold text-text">Audit log</h1>
 
+      <Card className="p-0">
         {entries.length === 0 && (
-          <p className="py-8 text-center text-sm text-zinc-500">No audit entries yet.</p>
+          <p className="py-8 text-center text-sm text-muted">No audit entries yet.</p>
         )}
 
-        <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <ul className="divide-y divide-border">
           {entries.map((entry) => (
-            <li key={entry.id} className="flex items-center justify-between py-3">
-              <div>
-                <p className="text-sm text-zinc-800 dark:text-zinc-200">
-                  <Badge variant={ACTION_BADGE[entry.action] ?? 'default'} className="mr-2">
-                    {entry.action}
-                  </Badge>
-                  {entry.purpose ?? <span className="text-zinc-500">Account</span>}
-                </p>
-                <p className="mt-0.5 text-xs text-zinc-500">
-                  {new Date(entry.timestamp).toLocaleString()}
-                </p>
-              </div>
+            <li key={entry.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-row-hover">
+              <Badge variant={ACTION_BADGE[entry.action] ?? 'default'} className="w-20 shrink-0 justify-center">
+                {entry.action}
+              </Badge>
+              <span className="min-w-0 flex-1 truncate text-sm text-text">
+                {entry.purpose ?? <span className="text-muted">Account</span>}
+              </span>
+              <time dateTime={entry.timestamp} className="shrink-0 font-mono text-2xs text-muted">
+                {new Date(entry.timestamp).toLocaleString()}
+              </time>
             </li>
           ))}
         </ul>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-zinc-400">
-            Page {page + 1} of {totalPages}
-          </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+      <Pagination
+        page={data?.number ?? page}
+        pageSize={AUDIT_PAGE_SIZE}
+        total={data?.totalElements ?? 0}
+        onPageChange={setPage}
+      />
     </div>
   )
 }

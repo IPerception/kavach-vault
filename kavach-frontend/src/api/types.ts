@@ -33,7 +33,6 @@ export interface Page<T> {
   totalElements: number
   totalPages: number
   number: number
-  size: number
 }
 
 export interface ProblemDetail {
