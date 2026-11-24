@@ -241,6 +241,26 @@ class CredentialServiceTest {
         assertThat(event.action()).isEqualTo(AuditAction.UPDATE);
     }
 
+    // --- toggleFavourite ---
+
+    @Test
+    void toggleFavourite_flipsFlagWithoutTouchingUpdatedAt() {
+        Credential existing = buildCredential(1L, "Gmail");
+        LocalDateTime longAgo = LocalDateTime.now().minusDays(120);
+        existing.setUpdatedAt(longAgo);
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(testUser));
+        when(credentialRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(credentialRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(credentialMapper.toSummaryDto(any())).thenReturn(
+                CredentialSummaryDto.builder().id(1L).purpose("Gmail").favourite(true).build());
+
+        credentialService.toggleFavourite(1L, "alice");
+
+        // Starring an old password must not hide it from the password-age warnings.
+        verify(credentialRepository).save(argThat(c ->
+                c.isFavourite() && longAgo.equals(c.getUpdatedAt())));
+    }
+
     // --- delete ---
 
     @Test

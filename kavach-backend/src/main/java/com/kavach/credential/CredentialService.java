@@ -147,7 +147,8 @@ public class CredentialService {
         VaultUser user = loadUser(username);
         Credential credential = findOwnedCredential(id, user);
         credential.setFavourite(!credential.isFavourite());
-        credential.setUpdatedAt(LocalDateTime.now());
+        // Deliberately leaves updatedAt alone: it drives password-age warnings (expiry
+        // banner, "need attention"), and starring is not a change to the credential.
         credential = credentialRepository.save(credential);
         return credentialMapper.toSummaryDto(credential);
     }
