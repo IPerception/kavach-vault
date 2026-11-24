@@ -8,6 +8,14 @@
 # otherwise. Security PRs (the ones the 25 open alerts will generate) need an
 # explicit `applies-to: security-updates`, or they arrive one per advisory no
 # matter what is configured below.
+#
+# Majors are NOT grouped. The version-update groups below only take minor and
+# patch updates, so every major (React, Tailwind, Spring Boot, ...) arrives as
+# its own PR and gets its own CI run. Grouped PRs #3, #4 and #5 carried
+# React 19, Tailwind 4, TypeScript 7 and Spring Boot 4 together, were merged
+# without a build, and broke main. Majors are ungrouped rather than
+# ignored on purpose: an ignore rule might also hold back a security fix that
+# needs a major bump (the zod 3 -> 4 advisory was one).
 version: 2
 updates:
   # ---- frontend (npm) ------------------------------------------------
@@ -33,10 +41,12 @@ updates:
         applies-to: version-updates
         dependency-type: "production"
         patterns: ["*"]
+        update-types: ["minor", "patch"]
       npm-development:
         applies-to: version-updates
         dependency-type: "development"
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: "Bump"
 
@@ -66,13 +76,12 @@ updates:
       maven:
         applies-to: version-updates
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: "Bump"
 
   # ---- CI --------------------------------------------------------------
-  # No workflows in the repo today, so this sits idle. It costs nothing and
-  # means the first workflow added is watched from the day it lands, rather
-  # than whenever someone remembers this file exists.
+  # Watches the actions pinned in .github/workflows/ (major tags, e.g. @v7).
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
