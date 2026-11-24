@@ -12,11 +12,19 @@ interface KavachStore {
   colorMode: ColorMode
   setStatus: (status: VaultStatus) => void
   recordActivity: () => void
-  lock: () => void
+  lock: () => Promise<void>
   doLogout: () => Promise<void>
   unlock: () => void
   setTheme: (theme: KavachTheme) => void
   setColorMode: (mode: ColorMode) => void
+}
+
+async function endSession() {
+  try {
+    await logout()
+  } catch {
+    // ignore -- lock the client regardless; the JWT expiry still bounds the session
+  }
 }
 
 export const useKavachStore = create<KavachStore>((set) => ({
@@ -29,14 +37,16 @@ export const useKavachStore = create<KavachStore>((set) => ({
 
   recordActivity: () => set({ lastActivity: Date.now() }),
 
-  lock: () => set({ status: 'locked' }),
+  // Locking must end the server session too: POST /auth/logout is what zeroes the
+  // master key in SessionKeyStore. Flipping only the client state (as this used to)
+  // left the key in server memory until the JWT expired.
+  lock: async () => {
+    await endSession()
+    set({ status: 'locked' })
+  },
 
   doLogout: async () => {
-    try {
-      await logout()
-    } catch {
-      // ignore -- clear state regardless
-    }
+    await endSession()
     set({ status: 'locked' })
   },
 
