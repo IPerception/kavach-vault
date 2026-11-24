@@ -44,9 +44,12 @@ updates:
       # groups because a dependency goes to the first group it matches.
       # Found the hard way: vitest 5 and @vitest/coverage-v8 5 arrived as two
       # PRs (#23, #24) and each failed CI for lack of the other.
+      # jest-dom ships the vitest matcher types and pins a vitest major as its
+      # peer (jest-dom 8 -> vitest >=5 <6), so it moves with vitest: the
+      # vitest 5 PR (#26) failed tsc on toBeInTheDocument without it.
       vitest:
         applies-to: version-updates
-        patterns: ["vitest", "@vitest/*"]
+        patterns: ["vitest", "@vitest/*", "@testing-library/jest-dom"]
       react:
         applies-to: version-updates
         patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
