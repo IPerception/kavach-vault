@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw, ServerOff } from 'lucide-react'
 import { Button } from './components/ui/Button'
+import { KavachMark } from './components/brand/KavachMark'
 import { getVaultStatus } from './api/auth'
 import { useKavachStore } from './store/useKavachStore'
 import { Layout } from './components/Layout'
@@ -19,11 +20,12 @@ import { HealthReport } from './screens/HealthReport'
 
 function BackendUnreachable({ retrying, onRetry }: { retrying: boolean; onRetry: () => void }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <div role="alert" className="w-full max-w-sm space-y-4 text-center">
-        <ServerOff className="mx-auto h-10 w-10 text-zinc-500" aria-hidden="true" />
-        <h1 className="text-lg font-semibold text-zinc-100">Can't reach Kavach</h1>
-        <p className="text-sm text-zinc-400">
+        <KavachMark size={32} decorative className="mx-auto" />
+        <ServerOff className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
+        <h1 className="text-lg font-semibold text-text">Can't reach Kavach</h1>
+        <p className="text-sm text-soft">
           The Kavach service isn't responding. If you started Kavach.exe, check its console
           window for errors, or restart it.
         </p>
@@ -77,8 +79,8 @@ export function App() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-kavach-400" />
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent" />
       </div>
     )
   }

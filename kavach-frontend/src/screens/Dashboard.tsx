@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Dialog from '@radix-ui/react-dialog'
 import { PlusCircle, Pencil, Trash2, ShieldCheck, KeyRound, Globe, ShieldOff, SearchX, ChevronLeft, ChevronRight, Tag, X, Star, StickyNote, NotebookPen } from 'lucide-react'
@@ -27,7 +27,10 @@ function CredentialAvatar({ purpose }: { purpose: string }) {
 
 export function Dashboard() {
   const [search, setSearch] = useState('')
-  const [activeTag, setActiveTag] = useState<string | null>(null)
+  // The tag filter lives in the URL (/dashboard?tag=x) so the sidebar tag links work.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTag = searchParams.get('tag')
+  const setActiveTag = (tag: string | null) => setSearchParams(tag === null ? {} : { tag })
   const [showStarredOnly, setShowStarredOnly] = useState(false)
   const [page, setPage] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; purpose: string } | null>(null)
@@ -79,7 +82,8 @@ export function Dashboard() {
 
   const favouriteMutation = useMutation({
     mutationFn: toggleFavourite,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['credentials'] }),
+    // exact: starring changes no password, so it must not trigger a health decrypt pass.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['credentials'], exact: true }),
   })
 
   const q = search.toLowerCase()

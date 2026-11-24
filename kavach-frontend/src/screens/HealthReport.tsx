@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import * as Dialog from '@radix-ui/react-dialog'
 import { ShieldCheck, ShieldAlert, Copy, Clock, Pencil, Flame, Wifi } from 'lucide-react'
-import { getHealthReport, checkBreaches } from '../api/credentials'
+import { checkBreaches } from '../api/credentials'
+import { useVaultHealth } from '../hooks/useVaultHealth'
+import { passwordAgeDate } from '../lib/attention'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import type { BreachResult, CredentialHealth } from '../api/types'
@@ -29,7 +31,7 @@ function issueTags(c: CredentialHealth) {
     tags.push({ label: c.strengthLabel, className: 'text-red-400 bg-red-500/10' })
   if (c.duplicate)
     tags.push({ label: 'Duplicate', className: 'text-orange-400 bg-orange-500/10' })
-  if (daysSince(c.updatedAt) >= STALE_DAYS)
+  if (daysSince(passwordAgeDate(c)) >= STALE_DAYS)
     tags.push({ label: 'Stale', className: 'text-zinc-600 bg-zinc-200/80 dark:text-zinc-400 dark:bg-zinc-700/50' })
   return tags
 }
@@ -37,10 +39,7 @@ function issueTags(c: CredentialHealth) {
 export function HealthReport() {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const { data: items = [], isLoading } = useQuery({
-    queryKey: ['health-report'],
-    queryFn: getHealthReport,
-  })
+  const { data: items = [], isLoading } = useVaultHealth()
 
   const breachMutation = useMutation({ mutationFn: checkBreaches })
 
@@ -58,7 +57,7 @@ export function HealthReport() {
 
   const weak = items.filter((c) => c.strengthScore <= 1).length
   const dupes = items.filter((c) => c.duplicate).length
-  const stale = items.filter((c) => daysSince(c.updatedAt) >= STALE_DAYS).length
+  const stale = items.filter((c) => daysSince(passwordAgeDate(c)) >= STALE_DAYS).length
   const totalIssues = items.filter((c) => issueTags(c).length > 0).length
 
   return (
