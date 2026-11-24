@@ -280,7 +280,66 @@ Maintenance release; no new features.
 
 ## Planned Features (in priority order)
 
-### 1. Browser Extension
+### 1. UI redesign -- IN PROGRESS (start here)
+Status as of 2026-11-24: design approved, implementation plan written, no code yet.
+Next step: PR 1 of the plan (Tailwind 4 CSS-first `@theme` tokens + bundled fonts + gold
+accent, five accent themes removed), handed to `code-writer` with the plan.
+
+- **Plan:** `docs/notes/redesign-plan.md` (gitignored, local). Ordered PRs, files, tests,
+  risks. Read its ADDENDUM at the end first -- it records later user decisions.
+- **Approved design:** "D. Combo" on the private design canvas
+  https://claude.ai/artifact/DandMh9VcbAAHo1xnC659M (artboards `Prototype` and
+  `Logo-Mark`). Local source: `docs/notes/redesign-canvas/project/`. The `t` object in
+  `Prototype.dc.html` holds every light/dark colour token.
+- **Decisions:** C ("Hearth") layout -- sidebar, greeting, summary strip -- at B
+  ("Console") density; vault rows show star, initial tile, name + username, chips in fixed
+  order website -> strength -> #tag, updated (amber when stale), Copy username + Reveal
+  (TOTP flow unchanged), row hover; slim favourites pill strip; one shared Pagination
+  component (first/prev/next/last) for Dashboard (client, 25) and Audit log (server, 20);
+  light + dark mode with ONE gold accent from the logo (navy secondary); IBM Plex Sans/Mono
+  + Fraunces, bundled locally (CSP blocks font CDNs); B-style lock screen; Delete moves
+  from list rows to the Edit screens.
+- **Logo:** a flat SVG mark (shield + padlock) goes in the sidebar, lock screen, favicon
+  and as the `Kavach.exe` icon (jpackage `--icon`, none today). The illustrated poster
+  (`public/Kavach-Logo.png`, 2.2 MB) stays only in the setup wizard as an optimised
+  ~100 KB image, plus README/landing page; it is removed from the header, lock screen and
+  Settings dialogs.
+- **Per-row strength:** the dashboard reuses `GET /credentials/health` (server scores in
+  memory, client gets score only) joined by id. Rejected: adding strength to the list DTO
+  (list would need the master key and decrypt on every fetch) and storing a score at save
+  time (writes "this password is weak" into kavach.db and every backup; backfill needs
+  the master key).
+- **Set aside:** pure A ("Quiet"), B and C directions; the five accent themes.
+
+### 2. Password age = password changes only
+"Not changed in 90+ days" (expiry banner, redesign's "need attention") must track the
+password, not any field: editing a username/URL resets `updatedAt` today. Add
+`credential.password_changed_at` (Liquibase, backfilled from `updated_at`), set on create
+and when an update changes the password -- NOT on master-password change (that re-encrypts
+DEKs but changes no password). Expose on CredentialSummaryDto. Lands before the redesign's
+Dashboard PR. (Starring no longer resets `updatedAt` -- fixed in #40.)
+
+### 3. Code signing for Kavach.exe -- required before sharing the download
+Windows Smart App Control blocks the unsigned jpackage launcher whenever the release zip
+is browser-downloaded (Mark-of-the-Web; CodeIntegrity events 3077/3033). Locally built
+copies run. The bundled Java DLLs are already Eclipse-signed; only `Kavach.exe` needs it,
+as a step in `release.yml` after jpackage. Options: Azure Artifact Signing (~$9.99/month,
+individuals in US/Canada, publisher = own name) or SignPath Foundation (free for OSS,
+publisher "SignPath Foundation", approval not guaranteed). Deferred while the owner is the
+only user; owner has not yet said whether they are in the US/Canada.
+
+### 4. OWASP Dependency-Check in CI
+Dependabot cannot see versions managed by the Spring Boot BOM (Spring, Tomcat, Jackson,
+Logback) -- they carried ~40 open advisories with zero alerts until 2026-11-23. Add
+`dependency-check-maven` as a CI job (NVD API key as a secret, fail on CVSS >= 7, tracked
+suppression file). Until then, check with OSV against `mvn dependency:tree`.
+
+### 5. Possibly dead email-OTP code
+`otp/` backend package, OtpService/OtpController, `OtpModal.tsx`, `useOtpFlow.ts` still
+exist alongside `totp/` since the reveal flow moved to TOTP in v1.2.0, carrying an SMTP
+dependency. Check reachability, then remove in its own PR.
+
+### 6. Browser Extension
 Autofill in browser login forms. Treated as v2.0 scope: roughly 2-3 weeks standalone, and
 closer to a separate project than a feature.
 
@@ -299,16 +358,24 @@ Four problems to solve before any of that matters:
    detection genuinely hard.
 4. **Publishing.** Chrome Web Store ($5 one-off), Firefox Add-ons (free); both review.
 
-### 2. macOS Build
-Run `mvn clean install -P native-installer` on a macOS machine. jpackage produces a `.dmg` by
-default. Attach to GitHub release as `Kavach-vX.Y.Z-macos.dmg`. Code signing via Apple Developer
-ID certificate is required to avoid Gatekeeper blocking.
+### 7. macOS Build
+jpackage produces a `.dmg` by default. No Mac needed: GitHub-hosted macOS runners are free
+for this public repo, so add a `macos-latest` job to `release.yml` and attach
+`Kavach-vX.Y.Z-macos.dmg`. Code signing via Apple Developer ID certificate is required to
+avoid Gatekeeper blocking.
 
-### 3. Linux Build
-Run `mvn clean install -P native-installer` on a Linux machine. jpackage produces a `.deb`
-(requires `dpkg-dev`) or `.rpm` (requires `rpm-build`). Attach to GitHub release accordingly.
+### 8. Linux Build
+jpackage produces a `.deb` (requires `dpkg-dev`) or `.rpm` (requires `rpm-build`). As with
+macOS, add an `ubuntu-latest` job to `release.yml` and attach the package.
 
 ## Dropped
 
 - **Per-credential TOTP storage** -- dropped 2026-05-30. Storing a credential's password
   and its TOTP secret in the same vault defeats the point of the second factor.
+- **Five accent themes** (amber/sky/emerald/rose/violet) -- dropped 2026-11-24 with the UI
+  redesign in favour of light/dark plus one gold accent taken from the logo. Fewer themes
+  are what make the design look finished.
+- **Liquibase 4 pin or a switch to Flyway** -- rejected 2026-11-23. Liquibase 5 is
+  FSL-1.1-ALv2 (source-available; each release becomes Apache 2.0 after two years). Kavach
+  is free and not a competing product, so FSL only requires the notice in
+  `THIRD-PARTY-NOTICES.md`; 4.x gets no fixes and Flyway would mean rewriting migrations.
