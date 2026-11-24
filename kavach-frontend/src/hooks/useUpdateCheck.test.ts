@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { isNewer, useUpdateCheck } from './useUpdateCheck'
 
 // Vite injects __APP_VERSION__ at build time; stub it for tests.
@@ -35,60 +35,61 @@ describe('useUpdateCheck', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns null initially and after fetch when version is current', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ tag_name: 'v1.1.0' }),
-    } as Response)
+  function respond(body: object, ok = true) {
+    vi.mocked(fetch).mockResolvedValue({ ok, json: async () => body } as Response)
+  }
 
+  async function renderAndCheck() {
+    const hook = renderHook(() => useUpdateCheck())
+    await act(() => hook.result.current.check())
+    return hook.result
+  }
+
+  it('does not contact GitHub until check() is called', () => {
     const { result } = renderHook(() => useUpdateCheck())
 
-    expect(result.current).toBeNull()
-    await waitFor(() => expect(fetch).toHaveBeenCalledOnce())
-    expect(result.current).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
+    expect(result.current.status).toEqual({ state: 'idle' })
   })
 
-  it('returns the newer version string when a newer release exists', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ tag_name: 'v1.2.0' }),
-    } as Response)
+  it('reports current when the latest release is this version', async () => {
+    respond({ tag_name: 'v1.1.0' })
 
-    const { result } = renderHook(() => useUpdateCheck())
+    const result = await renderAndCheck()
 
-    await waitFor(() => expect(result.current).toBe('1.2.0'))
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(result.current.status).toEqual({ state: 'current' })
   })
 
-  it('returns null when fetch fails', async () => {
+  it('reports the newer version when one exists', async () => {
+    respond({ tag_name: 'v1.2.0' })
+
+    const result = await renderAndCheck()
+
+    expect(result.current.status).toEqual({ state: 'available', version: '1.2.0' })
+  })
+
+  it('reports an error when fetch fails', async () => {
     vi.mocked(fetch).mockRejectedValue(new Error('network error'))
 
-    const { result } = renderHook(() => useUpdateCheck())
+    const result = await renderAndCheck()
 
-    await waitFor(() => expect(fetch).toHaveBeenCalledOnce())
-    expect(result.current).toBeNull()
+    expect(result.current.status).toEqual({ state: 'error' })
   })
 
-  it('returns null when response is not ok', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: false,
-      json: async () => ({}),
-    } as Response)
+  it('reports an error when the response is not ok', async () => {
+    respond({}, false)
 
-    const { result } = renderHook(() => useUpdateCheck())
+    const result = await renderAndCheck()
 
-    await waitFor(() => expect(fetch).toHaveBeenCalledOnce())
-    expect(result.current).toBeNull()
+    expect(result.current.status).toEqual({ state: 'error' })
   })
 
-  it('returns null when tag_name is missing from response', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({}),
-    } as Response)
+  it('reports an error when tag_name is missing from the response', async () => {
+    respond({})
 
-    const { result } = renderHook(() => useUpdateCheck())
+    const result = await renderAndCheck()
 
-    await waitFor(() => expect(fetch).toHaveBeenCalledOnce())
-    expect(result.current).toBeNull()
+    expect(result.current.status).toEqual({ state: 'error' })
   })
 })
