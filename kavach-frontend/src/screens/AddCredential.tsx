@@ -8,6 +8,8 @@ import { createCredential } from '../api/credentials'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
+import { Textarea } from '../components/ui/Textarea'
+import { ItemTypeSwitch } from '../components/ItemTypeSwitch'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
 import { PasswordGenerator } from '../components/PasswordGenerator'
 import { TagInput } from '../components/TagInput'
@@ -55,9 +57,9 @@ export function AddCredential() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
-        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Add Credential</h1>
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
+        <h1 className="font-display text-xl font-semibold text-text">New item</h1>
+        <ItemTypeSwitch current="password" />
       </div>
       <Card className="mx-auto max-w-lg">
 
@@ -96,20 +98,10 @@ export function AddCredential() {
           error={errors.url?.message}
           {...register('url')}
         />
-        <div className="flex flex-col gap-1">
-          <label htmlFor="notes" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Notes (optional)
-          </label>
-          <textarea
-            id="notes"
-            rows={3}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            {...register('notes')}
-          />
-        </div>
+        <Textarea id="notes" label="Notes (optional)" rows={3} {...register('notes')} />
         <TagInput value={tags} onChange={setTags} />
         {mutation.isError && (
-          <p className="text-xs text-red-400">
+          <p className="text-xs text-weak-text">
             {(mutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
               'Failed to save credential.'}
           </p>

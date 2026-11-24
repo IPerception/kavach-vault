@@ -8,6 +8,8 @@ import { createNote } from '../api/credentials'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
+import { Textarea } from '../components/ui/Textarea'
+import { ItemTypeSwitch } from '../components/ItemTypeSwitch'
 import { TagInput } from '../components/TagInput'
 
 const schema = z.object({
@@ -43,9 +45,9 @@ export function AddNote() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
-        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Add Secure Note</h1>
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
+        <h1 className="font-display text-xl font-semibold text-text">New item</h1>
+        <ItemTypeSwitch current="note" />
       </div>
       <Card className="mx-auto max-w-lg">
 
@@ -57,24 +59,17 @@ export function AddNote() {
           error={errors.title?.message}
           {...register('title')}
         />
-        <div className="flex flex-col gap-1">
-          <label htmlFor="body" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Note
-          </label>
-          <textarea
-            id="body"
-            rows={6}
-            placeholder="Enter your secure note here..."
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            {...register('body')}
-          />
-          {errors.body && (
-            <p className="text-xs text-red-400">{errors.body.message}</p>
-          )}
-        </div>
+        <Textarea
+          id="body"
+          label="Note"
+          rows={6}
+          placeholder="Enter your secure note here..."
+          error={errors.body?.message}
+          {...register('body')}
+        />
         <TagInput value={tags} onChange={setTags} />
         {mutation.isError && (
-          <p className="text-xs text-red-400">
+          <p className="text-xs text-weak-text">
             {(mutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
               'Failed to save note.'}
           </p>
