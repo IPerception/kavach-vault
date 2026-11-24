@@ -1,21 +1,23 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { SmartphoneNfc, KeyRound, ChevronRight, X, Info, Download, Upload, FolderOpen, Clock } from 'lucide-react'
+import { SmartphoneNfc, KeyRound, ChevronRight, Info, Download, Upload, FolderOpen, Clock } from 'lucide-react'
 import { changePassword, setupTotp, confirmTotp } from '../api/auth'
-import { exportVault, importVault, importCsv } from '../api/credentials'
+import { exportVault } from '../api/credentials'
 import { getBackupDestination, setBackupDestination, clearBackupDestination, runBackupNow } from '../api/backup'
 import { useKavachStore } from '../store/useKavachStore'
 import { EXPIRY_DAYS_KEY, EXPIRY_WARNING_KEY, DEFAULT_EXPIRY_DAYS, DEFAULT_WARNING_DAYS } from '../hooks/useExpiryCheck'
-import { Card, CardHeader, CardTitle } from '../components/ui/Card'
+import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/Dialog'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
+import { ImportDialog } from '../components/ImportDialog'
 import { UpdateCheck } from '../components/UpdateCheck'
-import type { ImportResult, TotpSetupData, VaultExport } from '../api/types'
+import type { TotpSetupData } from '../api/types'
 
 const PASSWORD_RULES = 'Must be at least 12 characters and contain uppercase, lowercase, digit, and special character.'
 
@@ -42,90 +44,38 @@ type FormValues = z.infer<typeof schema>
 type TotpResetStep = 'idle' | 'scanning' | 'done'
 type ActiveModal = 'password' | 'totp' | 'import' | 'backup' | 'expiry' | null
 
-export function Settings() {
+const selectClasses =
+  'h-9 rounded-control border border-border bg-input px-3 text-sm text-text focus:outline-hidden focus:ring-2 focus:ring-ring'
+
+const titleIconClasses = 'h-4 w-4 text-accent-text'
+
+interface SettingsDialogProps {
+  open: boolean
+  onClose: () => void
+  title: string
+  description: ReactNode
+  icon?: ReactNode
+  children: ReactNode
+}
+
+/** Shared shell for the Settings modals: Dialog with a title, description and body. */
+function SettingsDialog({ open, onClose, title, description, icon, children }: SettingsDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={(next) => { if (!next) onClose() }}>
+      <DialogContent>
+        <DialogTitle className="flex items-center gap-2 pr-8 text-base font-semibold text-text">
+          {icon}
+          {title}
+        </DialogTitle>
+        <DialogDescription className="mt-2 text-sm text-soft">{description}</DialogDescription>
+        <div className="mt-5">{children}</div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ChangePasswordForm() {
   const { setStatus } = useKavachStore()
-  const [activeModal, setActiveModal] = useState<ActiveModal>(null)
-  const qc = useQueryClient()
-
-  // --- export ---
-  const [exporting, setExporting] = useState(false)
-  const [exportError, setExportError] = useState<string | null>(null)
-
-  const handleExport = async () => {
-    setExporting(true)
-    setExportError(null)
-    try {
-      const payload = await exportVault()
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `kavach-export-${new Date().toISOString().slice(0, 10)}.json`
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      setExportError('Export failed. Please try again.')
-    } finally {
-      setExporting(false)
-    }
-  }
-
-  // --- import ---
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [importResult, setImportResult] = useState<ImportResult | null>(null)
-  const [importError, setImportError] = useState<string | null>(null)
-
-  const importMutation = useMutation({
-    mutationFn: (payload: VaultExport) => importVault(payload),
-    onSuccess: (result) => {
-      setImportResult(result)
-      qc.invalidateQueries({ queryKey: ['credentials'] })
-    },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      setImportError(err?.response?.data?.detail ?? 'Import failed. The file may be invalid or from a different vault.')
-    },
-  })
-
-  const csvImportMutation = useMutation({
-    mutationFn: (file: File) => importCsv(file),
-    onSuccess: (result) => {
-      setImportResult(result)
-      qc.invalidateQueries({ queryKey: ['credentials'] })
-    },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      setImportError(err?.response?.data?.detail ?? 'Import failed. The file may be invalid or not a supported CSV format.')
-    },
-  })
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImportError(null)
-    setImportResult(null)
-    if (file.name.toLowerCase().endsWith('.csv')) {
-      csvImportMutation.mutate(file)
-    } else {
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        try {
-          const payload = JSON.parse(ev.target?.result as string) as VaultExport
-          importMutation.mutate(payload)
-        } catch {
-          setImportError('Could not read file. Make sure it is a valid Kavach export.')
-        }
-      }
-      reader.readAsText(file)
-    }
-    e.target.value = ''
-  }
-
-  const closeImportModal = () => {
-    setActiveModal(null)
-    setImportResult(null)
-    setImportError(null)
-  }
-
-  // --- change password ---
   const { register, handleSubmit, watch, reset, setError, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   })
@@ -144,7 +94,48 @@ export function Settings() {
     },
   })
 
-  // --- totp reset ---
+  return (
+    <form onSubmit={handleSubmit((d) => passwordMutation.mutate(d))} className="space-y-4">
+      <Input
+        id="currentPassword"
+        label="Current password"
+        type="password"
+        autoComplete="current-password"
+        error={errors.currentPassword?.message}
+        {...register('currentPassword')}
+      />
+      <div>
+        <Input
+          id="newPassword"
+          label="New password"
+          type="password"
+          autoComplete="new-password"
+          error={errors.newPassword?.message}
+          {...register('newPassword')}
+        />
+        <PasswordStrengthMeter password={newPassword} />
+      </div>
+      <Input
+        id="confirm"
+        label="Confirm new password"
+        type="password"
+        autoComplete="new-password"
+        error={errors.confirm?.message}
+        {...register('confirm')}
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="secondary" onClick={() => reset()}>
+          Reset
+        </Button>
+        <Button type="submit" loading={passwordMutation.isPending}>
+          Change password
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+function TotpResetBody({ onClose }: { onClose: () => void }) {
   const [totpStep, setTotpStep] = useState<TotpResetStep>('idle')
   const [totpData, setTotpData] = useState<TotpSetupData | null>(null)
   const [totpError, setTotpError] = useState<string | null>(null)
@@ -161,30 +152,100 @@ export function Settings() {
     onError: () => setTotpError('Invalid code. Open your authenticator app and try the current code.'),
   })
 
-  const closeModal = () => {
-    setActiveModal(null)
-    setTotpStep('idle')
-    setTotpData(null)
-    setTotpError(null)
-  }
+  return (
+    <>
+      {totpStep === 'idle' && (
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            loading={setupMutation.isPending}
+            onClick={() => setupMutation.mutate()}
+          >
+            Reset authenticator
+          </Button>
+        </div>
+      )}
 
-  // --- backup destination ---
-  const [backupPath, setBackupPath] = useState('')
+      {totpStep === 'scanning' && totpData && (
+        <div className="space-y-4">
+          <p className="text-sm text-soft">
+            Scan the QR code with your authenticator app, then enter the 6-digit code to confirm.
+          </p>
+          <div className="flex justify-center">
+            <div className="rounded-panel border border-border bg-white p-3">
+              <QRCodeSVG value={totpData.qrCodeUri} size={150} />
+            </div>
+          </div>
+          <details className="text-xs text-muted">
+            <summary className="cursor-pointer select-none">Can't scan? Enter manually</summary>
+            <div className="mt-2 rounded-control border border-border bg-raised px-3 py-2">
+              <div className="mb-1 flex items-center gap-1 text-muted">
+                <span>Secret key</span>
+                <div className="group relative">
+                  <Info className="h-3 w-3 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 rounded-control border border-border bg-panel px-3 py-2 text-xs text-soft shadow-surface group-hover:block">
+                    A shared key between Kavach and your authenticator app. It generates
+                    the same time-based codes as the QR code above. Keep it private.
+                  </div>
+                </div>
+              </div>
+              <p className="break-all font-mono text-soft">{totpData.secret}</p>
+            </div>
+          </details>
+          <form
+            className="space-y-3"
+            onSubmit={(e) => { e.preventDefault(); confirmMutation.mutate() }}
+          >
+            <Input
+              ref={codeRef}
+              id="totp-reset-code"
+              label="6-digit code from your app"
+              type="text"
+              mono
+              inputMode="numeric"
+              maxLength={6}
+              pattern="[0-9]{6}"
+              autoComplete="one-time-code"
+              autoFocus
+              error={totpError ?? undefined}
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => { setTotpStep('idle'); setTotpData(null) }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" loading={confirmMutation.isPending}>
+                Confirm
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {totpStep === 'done' && (
+        <div className="space-y-3">
+          <p className="text-sm text-ok-text">
+            Authenticator reset successfully. Your new app is now active.
+          </p>
+          <div className="flex justify-end">
+            <Button variant="secondary" onClick={onClose}>
+              Done
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function BackupBody({ initialPath }: { initialPath: string }) {
+  const [backupPath, setBackupPath] = useState(initialPath)
   const [backupStatus, setBackupStatus] = useState<string | null>(null)
   const [backupError, setBackupError] = useState<string | null>(null)
   const [backupRunning, setBackupRunning] = useState(false)
-
-  const openBackupModal = async () => {
-    setBackupStatus(null)
-    setBackupError(null)
-    try {
-      const data = await getBackupDestination()
-      setBackupPath(data.destination)
-    } catch {
-      setBackupPath('')
-    }
-    setActiveModal('backup')
-  }
 
   const saveBackupMutation = useMutation({
     mutationFn: () => setBackupDestination(backupPath),
@@ -212,66 +273,194 @@ export function Settings() {
     }
   }
 
-  const closeBackupModal = () => {
-    setActiveModal(null)
-    setBackupStatus(null)
-    setBackupError(null)
+  return (
+    <div className="space-y-4">
+      <Input
+        id="backup-path"
+        label="Folder path"
+        type="text"
+        mono
+        placeholder="e.g. D:\Backups or /Volumes/USB"
+        value={backupPath}
+        onChange={(e) => { setBackupPath(e.target.value); setBackupStatus(null); setBackupError(null) }}
+      />
+
+      {backupStatus && <p className="text-xs text-ok-text">{backupStatus}</p>}
+      {backupError && <p className="text-xs text-weak-text">{backupError}</p>}
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          loading={saveBackupMutation.isPending}
+          onClick={() => saveBackupMutation.mutate()}
+        >
+          Save
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          loading={backupRunning}
+          onClick={handleRunNow}
+        >
+          Back up now
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          loading={clearBackupMutation.isPending}
+          onClick={() => clearBackupMutation.mutate()}
+        >
+          Clear
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+interface ExpiryBodyProps {
+  initialExpiryDays: number
+  initialWarningDays: number
+  onSave: (expiryDays: number, warningDays: number) => void
+  onCancel: () => void
+}
+
+function ExpiryBody({ initialExpiryDays, initialWarningDays, onSave, onCancel }: ExpiryBodyProps) {
+  const [expiryDays, setExpiryDays] = useState(initialExpiryDays)
+  const [warningDays, setWarningDays] = useState(initialWarningDays)
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="expiry-days" className="text-sm font-medium text-soft">
+          Expiry period
+        </label>
+        <select
+          id="expiry-days"
+          value={expiryDays}
+          onChange={(e) => setExpiryDays(Number(e.target.value))}
+          className={selectClasses}
+        >
+          <option value={60}>60 days</option>
+          <option value={90}>90 days (default)</option>
+          <option value={180}>180 days</option>
+          <option value={365}>365 days</option>
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="warning-days" className="text-sm font-medium text-soft">
+          Warn me before expiry
+        </label>
+        <select
+          id="warning-days"
+          value={warningDays}
+          onChange={(e) => setWarningDays(Number(e.target.value))}
+          className={selectClasses}
+        >
+          <option value={7}>7 days before</option>
+          <option value={14}>14 days before (default)</option>
+          <option value={30}>30 days before</option>
+        </select>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Button type="button" onClick={() => onSave(expiryDays, warningDays)}>Save</Button>
+      </div>
+    </div>
+  )
+}
+
+export function Settings() {
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null)
+  const closeModal = () => setActiveModal(null)
+
+  // --- export ---
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const handleExport = async () => {
+    setExporting(true)
+    setExportError(null)
+    try {
+      const payload = await exportVault()
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `kavach-export-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setExportError('Export failed. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // --- backup destination: fetched before the dialog opens ---
+  const [backupInitialPath, setBackupInitialPath] = useState('')
+
+  const openBackupModal = async () => {
+    try {
+      const data = await getBackupDestination()
+      setBackupInitialPath(data.destination)
+    } catch {
+      setBackupInitialPath('')
+    }
+    setActiveModal('backup')
   }
 
   // --- password expiry ---
-  const [expiryDays, setExpiryDaysState] = useState(
+  const [expiryDays, setExpiryDays] = useState(
     () => parseInt(localStorage.getItem(EXPIRY_DAYS_KEY) ?? String(DEFAULT_EXPIRY_DAYS))
   )
-  const [warningDays, setWarningDaysState] = useState(
+  const [warningDays, setWarningDays] = useState(
     () => parseInt(localStorage.getItem(EXPIRY_WARNING_KEY) ?? String(DEFAULT_WARNING_DAYS))
   )
 
-  function saveExpiry() {
-    localStorage.setItem(EXPIRY_DAYS_KEY, String(expiryDays))
-    localStorage.setItem(EXPIRY_WARNING_KEY, String(warningDays))
-    setActiveModal(null)
+  function saveExpiry(nextExpiryDays: number, nextWarningDays: number) {
+    localStorage.setItem(EXPIRY_DAYS_KEY, String(nextExpiryDays))
+    localStorage.setItem(EXPIRY_WARNING_KEY, String(nextWarningDays))
+    setExpiryDays(nextExpiryDays)
+    setWarningDays(nextWarningDays)
+    closeModal()
   }
 
   const settingsItems = [
     {
       key: 'password' as const,
-      icon: <KeyRound className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
+      icon: <KeyRound className="h-5 w-5" />,
       title: 'Change master password',
       description: 'Update your vault master password',
     },
     {
       key: 'totp' as const,
-      icon: <SmartphoneNfc className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
+      icon: <SmartphoneNfc className="h-5 w-5" />,
       title: 'Authenticator app',
       description: 'Reset and re-enroll your TOTP authenticator',
     },
     {
       key: 'export' as const,
-      icon: <Download className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
+      icon: <Download className="h-5 w-5" />,
       title: 'Export vault',
       description: 'Download an encrypted backup of all credentials',
     },
     {
       key: 'import' as const,
-      icon: <Upload className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
+      icon: <Upload className="h-5 w-5" />,
       title: 'Import vault',
       description: 'Restore credentials from a Kavach export file',
     },
     {
       key: 'backup' as const,
-      icon: <FolderOpen className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
+      icon: <FolderOpen className="h-5 w-5" />,
       title: 'Backup destination',
       description: 'Copy the database to a folder on each startup',
     },
     {
       key: 'expiry' as const,
-      icon: <Clock className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
+      icon: <Clock className="h-5 w-5" />,
       title: 'Password expiry',
       description: `Remind when passwords are older than ${expiryDays} days`,
     },
@@ -279,24 +468,26 @@ export function Settings() {
 
   return (
     <>
+      <h1 className="mb-6 font-display text-xl font-semibold text-text">Settings</h1>
+
       {/* Settings list */}
       <Card className="max-w-lg p-0!">
-        <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <ul className="divide-y divide-border">
           {settingsItems.map((item) => (
             <li key={item.key}>
               <button
-                className="flex w-full items-center gap-4 px-6 py-5 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60"
+                className="flex w-full items-center gap-4 px-6 py-5 transition-colors hover:bg-row-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:opacity-50"
                 onClick={() => item.key === 'export' ? handleExport() : item.key === 'backup' ? openBackupModal() : setActiveModal(item.key)}
                 disabled={item.key === 'export' && exporting}
               >
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.iconBg}`}>
+                <div className="flex h-9 w-9 items-center justify-center rounded-control bg-raised text-accent-text">
                   {item.icon}
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</p>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">{item.description}</p>
+                  <p className="text-sm font-medium text-text">{item.title}</p>
+                  <p className="text-xs text-soft">{item.description}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-zinc-500" />
+                <ChevronRight className="h-4 w-4 text-muted" />
               </button>
             </li>
           ))}
@@ -306,357 +497,55 @@ export function Settings() {
       <UpdateCheck />
 
       {exportError && (
-        <p className="mt-2 text-xs text-red-400">{exportError}</p>
+        <p className="mt-2 text-xs text-weak-text">{exportError}</p>
       )}
 
-      {/* Hidden file input for import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json,.csv"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+      <SettingsDialog
+        open={activeModal === 'password'}
+        onClose={closeModal}
+        title="Change master password"
+        icon={<KeyRound className={titleIconClasses} aria-hidden="true" />}
+        description="After changing, you will be logged out and must unlock with the new password."
+      >
+        <ChangePasswordForm />
+      </SettingsDialog>
 
-      {/* Modal overlay */}
-      {activeModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
-          onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
-        >
-          <Card
-            className="w-full max-w-3xl overflow-hidden p-0!"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex h-[540px]">
-              {/* Left column - logo panel */}
-              <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
-                <img
-                  src="/Kavach-Logo.png"
-                  alt="Kavach"
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              </div>
+      <SettingsDialog
+        open={activeModal === 'totp'}
+        onClose={closeModal}
+        title="Authenticator app"
+        icon={<SmartphoneNfc className={titleIconClasses} aria-hidden="true" />}
+        description="Reset your TOTP secret and re-enroll a new authenticator app. Use this if you lose access to your current authenticator."
+      >
+        <TotpResetBody onClose={closeModal} />
+      </SettingsDialog>
 
-              {/* Right column - content */}
-              <div className="relative flex flex-1 flex-col justify-center overflow-y-auto p-8">
-                <button
-                  onClick={activeModal === 'import' ? closeImportModal : activeModal === 'backup' ? closeBackupModal : closeModal}
-                  className="absolute right-3 top-3 rounded-sm p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+      <ImportDialog open={activeModal === 'import'} onOpenChange={(next) => { if (!next) closeModal() }} />
 
-                {/* Change password */}
-                {activeModal === 'password' && (
-                  <>
-                    <CardHeader>
-                      <CardTitle className="text-center font-bold underline text-kavach-500">
-                        Change master password
-                      </CardTitle>
-                      <p className="mt-1 text-sm text-zinc-400">
-                        After changing, you will be logged out and must unlock with the new password.
-                      </p>
-                    </CardHeader>
+      <SettingsDialog
+        open={activeModal === 'backup'}
+        onClose={closeModal}
+        title="Backup destination"
+        icon={<FolderOpen className={titleIconClasses} aria-hidden="true" />}
+        description="On each startup, Kavach copies your database to this folder. Leave blank to disable automatic backups."
+      >
+        <BackupBody initialPath={backupInitialPath} />
+      </SettingsDialog>
 
-                    <form onSubmit={handleSubmit((d) => passwordMutation.mutate(d))} className="space-y-4">
-                      <Input
-                        id="currentPassword"
-                        label="Current password"
-                        type="password"
-                        autoComplete="current-password"
-                        error={errors.currentPassword?.message}
-                        {...register('currentPassword')}
-                      />
-                      <div>
-                        <Input
-                          id="newPassword"
-                          label="New password"
-                          type="password"
-                          autoComplete="new-password"
-                          error={errors.newPassword?.message}
-                          {...register('newPassword')}
-                        />
-                        <PasswordStrengthMeter password={newPassword} />
-                      </div>
-                      <Input
-                        id="confirm"
-                        label="Confirm new password"
-                        type="password"
-                        autoComplete="new-password"
-                        error={errors.confirm?.message}
-                        {...register('confirm')}
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="secondary" onClick={() => reset()}>
-                          Reset
-                        </Button>
-                        <Button type="submit" loading={passwordMutation.isPending}>
-                          Change password
-                        </Button>
-                      </div>
-                    </form>
-                  </>
-                )}
-
-                {/* Authenticator app */}
-                {activeModal === 'totp' && (
-                  <>
-                    <CardHeader>
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        <SmartphoneNfc className="h-5 w-5 text-kavach-500" />
-                        <CardTitle className="text-center font-bold underline text-kavach-500">
-                          Authenticator app
-                        </CardTitle>
-                      </div>
-                      <p className="text-center text-sm text-zinc-400">
-                        Reset your TOTP secret and re-enroll a new authenticator app. Use this if
-                        you lose access to your current authenticator.
-                      </p>
-                    </CardHeader>
-
-                    {totpStep === 'idle' && (
-                      <div className="flex justify-center">
-                        <Button
-                          variant="secondary"
-                          loading={setupMutation.isPending}
-                          onClick={() => setupMutation.mutate()}
-                        >
-                          Reset authenticator
-                        </Button>
-                      </div>
-                    )}
-
-                    {totpStep === 'scanning' && totpData && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-zinc-300">
-                          Scan the QR code with your authenticator app, then enter the 6-digit code to confirm.
-                        </p>
-                        <div className="flex justify-center">
-                          <div className="rounded-lg border border-zinc-700 bg-white p-3">
-                            <QRCodeSVG value={totpData.qrCodeUri} size={150} />
-                          </div>
-                        </div>
-                        <details className="text-xs text-zinc-500">
-                          <summary className="cursor-pointer select-none">Can't scan? Enter manually</summary>
-                          <div className="mt-2 rounded-sm bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
-                            <div className="mb-1 flex items-center gap-1 text-zinc-500">
-                              <span>Secret key</span>
-                              <div className="group relative">
-                                <Info className="h-3 w-3 cursor-help" />
-                                <div className="absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 rounded-sm bg-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow-lg group-hover:block">
-                                  A shared key between Kavach and your authenticator app. It generates
-                                  the same time-based codes as the QR code above. Keep it private.
-                                </div>
-                              </div>
-                            </div>
-                            <p className="break-all font-mono text-zinc-700 dark:text-zinc-300">{totpData.secret}</p>
-                          </div>
-                        </details>
-                        <form
-                          className="space-y-3"
-                          onSubmit={(e) => { e.preventDefault(); confirmMutation.mutate() }}
-                        >
-                          <Input
-                            ref={codeRef}
-                            id="totp-reset-code"
-                            label="6-digit code from your app"
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={6}
-                            pattern="[0-9]{6}"
-                            autoComplete="one-time-code"
-                            autoFocus
-                            error={totpError ?? undefined}
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={() => { setTotpStep('idle'); setTotpData(null) }}
-                            >
-                              Cancel
-                            </Button>
-                            <Button type="submit" loading={confirmMutation.isPending}>
-                              Confirm
-                            </Button>
-                          </div>
-                        </form>
-                      </div>
-                    )}
-
-                    {totpStep === 'done' && (
-                      <div className="space-y-3">
-                        <p className="text-sm text-green-400">
-                          Authenticator reset successfully. Your new app is now active.
-                        </p>
-                        <Button variant="secondary" onClick={closeModal}>
-                          Done
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Import vault */}
-                {activeModal === 'import' && (
-                  <>
-                    <CardHeader>
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        <Upload className="h-5 w-5 text-kavach-500" />
-                        <CardTitle className="text-center font-bold underline text-kavach-500">
-                          Import vault
-                        </CardTitle>
-                      </div>
-                      <p className="text-center text-sm text-zinc-400">
-                        Select a Kavach export (.json) or a CSV exported from Chrome, LastPass, or Bitwarden.
-                        Credentials that already exist will be skipped.
-                      </p>
-                    </CardHeader>
-
-                    {importResult ? (
-                      <div className="space-y-4 text-center">
-                        <p className="text-sm text-green-400">
-                          Import complete: {importResult.imported} added
-                          {importResult.skipped > 0 && `, ${importResult.skipped} skipped (already exist)`}.
-                        </p>
-                        <Button variant="secondary" onClick={closeImportModal}>Done</Button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-4">
-                        {importError && (
-                          <p className="text-xs text-red-400">{importError}</p>
-                        )}
-                        <Button
-                          variant="secondary"
-                          loading={importMutation.isPending || csvImportMutation.isPending}
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <Upload className="mr-1.5 h-4 w-4" />
-                          Choose file
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Backup destination */}
-                {activeModal === 'backup' && (
-                  <>
-                    <CardHeader>
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        <FolderOpen className="h-5 w-5 text-kavach-500" />
-                        <CardTitle className="text-center font-bold underline text-kavach-500">
-                          Backup destination
-                        </CardTitle>
-                      </div>
-                      <p className="text-center text-sm text-zinc-400">
-                        On each startup, Kavach copies your database to this folder. Leave blank to disable automatic backups.
-                      </p>
-                    </CardHeader>
-
-                    <div className="space-y-4">
-                      <Input
-                        id="backup-path"
-                        label="Folder path"
-                        type="text"
-                        placeholder="e.g. D:\Backups or /Volumes/USB"
-                        value={backupPath}
-                        onChange={(e) => { setBackupPath(e.target.value); setBackupStatus(null); setBackupError(null) }}
-                      />
-
-                      {backupStatus && <p className="text-xs text-green-400">{backupStatus}</p>}
-                      {backupError && <p className="text-xs text-red-400">{backupError}</p>}
-
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          loading={saveBackupMutation.isPending}
-                          onClick={() => saveBackupMutation.mutate()}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          loading={backupRunning}
-                          onClick={handleRunNow}
-                        >
-                          Back up now
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          loading={clearBackupMutation.isPending}
-                          onClick={() => clearBackupMutation.mutate()}
-                        >
-                          Clear
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Password expiry */}
-                {activeModal === 'expiry' && (
-                  <>
-                    <CardHeader>
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        <Clock className="h-5 w-5 text-kavach-500" />
-                        <CardTitle className="text-center font-bold underline text-kavach-500">
-                          Password expiry
-                        </CardTitle>
-                      </div>
-                      <p className="text-center text-sm text-zinc-400">
-                        Kavach will remind you when passwords have not been updated within the expiry period.
-                      </p>
-                    </CardHeader>
-
-                    <div className="space-y-5">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                          Expiry period
-                        </label>
-                        <select
-                          value={expiryDays}
-                          onChange={(e) => setExpiryDaysState(Number(e.target.value))}
-                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                          <option value={60}>60 days</option>
-                          <option value={90}>90 days (default)</option>
-                          <option value={180}>180 days</option>
-                          <option value={365}>365 days</option>
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                          Warn me before expiry
-                        </label>
-                        <select
-                          value={warningDays}
-                          onChange={(e) => setWarningDaysState(Number(e.target.value))}
-                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                          <option value={7}>7 days before</option>
-                          <option value={14}>14 days before (default)</option>
-                          <option value={30}>30 days before</option>
-                        </select>
-                      </div>
-
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
-                        <Button type="button" onClick={saveExpiry}>Save</Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <SettingsDialog
+        open={activeModal === 'expiry'}
+        onClose={closeModal}
+        title="Password expiry"
+        icon={<Clock className={titleIconClasses} aria-hidden="true" />}
+        description="Kavach will remind you when passwords have not been updated within the expiry period."
+      >
+        <ExpiryBody
+          initialExpiryDays={expiryDays}
+          initialWarningDays={warningDays}
+          onSave={saveExpiry}
+          onCancel={closeModal}
+        />
+      </SettingsDialog>
     </>
   )
 }

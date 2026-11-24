@@ -30,12 +30,12 @@ export function UpdateCheck() {
   return (
     <Card className="mt-4 max-w-lg px-6 py-5">
       <div className="flex items-center gap-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kavach-500/10">
-          <ArrowUpCircle className="h-5 w-5 text-kavach-500" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-control bg-raised">
+          <ArrowUpCircle className="h-5 w-5 text-accent-text" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Updates</p>
-          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm font-medium text-text">Updates</p>
+          <p className="text-xs text-soft">
             You are on Kavach {__APP_VERSION__}. Checking contacts GitHub.
           </p>
         </div>
@@ -48,7 +48,7 @@ export function UpdateCheck() {
           Check for updates
         </Button>
       </div>
-      <p role="status" aria-live="polite" className="mt-3 text-xs text-zinc-700 empty:hidden dark:text-zinc-300">
+      <p role="status" aria-live="polite" className="mt-3 text-xs text-soft empty:hidden">
         <StatusMessage status={status} />
       </p>
     </Card>
