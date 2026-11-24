@@ -217,7 +217,7 @@ Every phase ships with its tests. No deferred testing. Backend: JUnit 5 + Mockit
 
 ## Completed Features
 
-Current release: **v1.3.1**.
+Current release: **v1.3.2**.
 
 ### Released in v1.0.0 - v1.1.0
 
@@ -267,6 +267,16 @@ Maintenance and security release; no new features.
   Maven build; all npm advisories cleared.
 - **CI and releases** -- `.github/workflows/ci.yml` builds and tests every PR;
   `.github/workflows/release.yml` drafts a release from a `vX.Y.Z` tag.
+
+### Released in v1.3.2
+
+Maintenance release; no new features.
+
+- **Spring Boot 4.2.0** -- Spring Framework 7.1, Spring Security 7.2, Logback 1.6.
+  Smoke-tested against a copy of an existing vault: Liquibase changelog unchanged.
+- **Bundled runtime Temurin 25.0.5.1** -- the first release built with setup-java
+  `check-latest`; v1.3.1 had shipped 25.0.5 from the runner's preinstalled JDK. Raised by
+  the Java patch reminder (issue #37).
 
 ## Planned Features (in priority order)
 
