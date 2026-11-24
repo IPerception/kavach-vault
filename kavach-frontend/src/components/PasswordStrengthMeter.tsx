@@ -1,3 +1,5 @@
+import { strengthBucket } from '../lib/attention'
+
 interface PasswordStrengthMeterProps {
   password: string
 }
@@ -18,8 +20,8 @@ export function scorePassword(password: string): PasswordStrength {
 
   const clamped = Math.min(4, score) as 0 | 1 | 2 | 3 | 4
   const labels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong']
-  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-400', 'bg-blue-500', 'bg-green-500']
-  return { score: clamped, label: labels[clamped], color: colors[clamped] }
+  const barColors = { weak: 'bg-weak-bar', fair: 'bg-fair-bar', strong: 'bg-ok-bar' }
+  return { score: clamped, label: labels[clamped], color: barColors[strengthBucket(clamped)] }
 }
 
 export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) {
@@ -29,7 +31,7 @@ export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) 
 
   return (
     <div className="mt-2 space-y-1.5" aria-label={`Password strength: ${label}`}>
-      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-zinc-700">
+      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-track">
         <div
           className={`h-full rounded-full transition-all duration-500 ease-out ${color}`}
           style={{ width: `${widthPct}%` }}
@@ -37,12 +39,12 @@ export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) 
         {/* Segment dividers */}
         <div className="pointer-events-none absolute inset-0 flex">
           {[1, 2, 3].map((i) => (
-            <div key={i} style={{ left: `${i * 25}%` }} className="absolute h-full w-px bg-zinc-900" />
+            <div key={i} style={{ left: `${i * 25}%` }} className="absolute h-full w-px bg-panel" />
           ))}
         </div>
       </div>
-      <p className="text-xs text-zinc-400">
-        Strength: <span className="font-medium text-zinc-200">{label}</span>
+      <p className="text-xs text-muted">
+        Strength: <span className="font-medium text-text">{label}</span>
       </p>
     </div>
   )

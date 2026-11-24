@@ -4,12 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import * as Dialog from '@radix-ui/react-dialog'
 import { RefreshCw } from 'lucide-react'
 import { listCredentials, updateCredential } from '../api/credentials'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
+import { DeleteItemDialog } from '../components/DeleteItemDialog'
+import { Textarea } from '../components/ui/Textarea'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../components/ui/Dialog'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
 import { PasswordGenerator } from '../components/PasswordGenerator'
 import { TagInput } from '../components/TagInput'
@@ -79,14 +81,14 @@ export function EditCredential() {
   })
 
   if (!credential) {
-    return <p className="text-sm text-zinc-400">Credential not found.</p>
+    return <p className="text-sm text-soft">Credential not found.</p>
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Vault</p>
-        <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">Edit Credential</h1>
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
+        <h1 className="font-display text-xl font-semibold text-text">Edit item</h1>
+        <DeleteItemDialog id={credential.id} name={credential.purpose} kind="credential" />
       </div>
       <Card className="mx-auto max-w-lg">
 
@@ -118,46 +120,39 @@ export function EditCredential() {
         </div>
         <PasswordGenerator onGenerated={(pw) => setPendingPassword(pw)} />
 
-        <Dialog.Root open={pendingPassword !== null} onOpenChange={(open) => { if (!open) setPendingPassword(null) }}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-            <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-hidden dark:border-zinc-700 dark:bg-zinc-900">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kavach-500/10">
-                  <RefreshCw className="h-5 w-5 text-kavach-500" />
-                </div>
-                <div>
-                  <Dialog.Title className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                    Replace password?
-                  </Dialog.Title>
-                  <Dialog.Description className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {credential.purpose}
-                  </Dialog.Description>
-                </div>
+        <Dialog open={pendingPassword !== null} onOpenChange={(open) => { if (!open) setPendingPassword(null) }}>
+          <DialogContent className="max-w-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15">
+                <RefreshCw className="h-5 w-5 text-accent-text" aria-hidden="true" />
               </div>
-              <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
-                The generated password will replace the current password field:
-              </p>
-              <p className="mb-5 break-all rounded-sm bg-zinc-100 px-3 py-2 font-mono text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-                {pendingPassword}
-              </p>
-              <div className="flex justify-end gap-3">
-                <Dialog.Close asChild>
-                  <Button variant="ghost" size="sm">Cancel</Button>
-                </Dialog.Close>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setValue('password', pendingPassword ?? '', { shouldValidate: true })
-                    setPendingPassword(null)
-                  }}
-                >
-                  Replace
-                </Button>
+              <div>
+                <DialogTitle className="text-base font-semibold text-text">Replace password?</DialogTitle>
+                <DialogDescription className="text-sm text-soft">{credential.purpose}</DialogDescription>
               </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+            </div>
+            <p className="mb-3 text-sm text-soft">
+              The generated password will replace the current password field:
+            </p>
+            <p className="mb-5 break-all rounded-control bg-chip px-3 py-2 font-mono text-xs text-text">
+              {pendingPassword}
+            </p>
+            <div className="flex justify-end gap-3">
+              <DialogClose asChild>
+                <Button variant="ghost" size="sm">Cancel</Button>
+              </DialogClose>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setValue('password', pendingPassword ?? '', { shouldValidate: true })
+                  setPendingPassword(null)
+                }}
+              >
+                Replace
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         <Input
           id="url"
           label="URL (optional)"
@@ -166,20 +161,10 @@ export function EditCredential() {
           error={errors.url?.message}
           {...register('url')}
         />
-        <div className="flex flex-col gap-1">
-          <label htmlFor="notes" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Notes (optional)
-          </label>
-          <textarea
-            id="notes"
-            rows={3}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            {...register('notes')}
-          />
-        </div>
+        <Textarea id="notes" label="Notes (optional)" rows={3} {...register('notes')} />
         <TagInput value={tags} onChange={setTags} />
         {mutation.isError && (
-          <p className="text-xs text-red-400">Failed to update credential.</p>
+          <p className="text-xs text-weak-text">Failed to update credential.</p>
         )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={() => navigate(-1)}>

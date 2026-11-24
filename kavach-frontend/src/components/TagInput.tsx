@@ -1,5 +1,7 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useId, useState, type KeyboardEvent } from 'react'
 import { X } from 'lucide-react'
+import { Chip } from './ui/Chip'
+import { IconButton } from './ui/IconButton'
 
 interface TagInputProps {
   value: string[]
@@ -8,6 +10,7 @@ interface TagInputProps {
 
 export function TagInput({ value, onChange }: TagInputProps) {
   const [inputValue, setInputValue] = useState('')
+  const inputId = useId()
 
   function addTag(raw: string) {
     const tag = raw.trim().toLowerCase()
@@ -32,35 +35,33 @@ export function TagInput({ value, onChange }: TagInputProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tags (optional)</label>
-      <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 focus-within:ring-2 focus-within:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800">
+      <label htmlFor={inputId} className="text-sm font-medium text-soft">Tags (optional)</label>
+      <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-control border border-border bg-input px-3 py-1.5 focus-within:ring-2 focus-within:ring-ring">
         {value.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-kavach-500/20 px-2 py-0.5 text-xs font-medium text-kavach-400"
-          >
-            {tag}
-            <button
-              type="button"
+          <Chip key={tag} className="pr-1">
+            #{tag}
+            <IconButton
+              label={`Remove tag ${tag}`}
+              tooltip={false}
               onClick={() => removeTag(tag)}
-              className="text-kavach-400 hover:text-kavach-300"
-              aria-label={`Remove tag ${tag}`}
+              className="h-4 w-4 rounded-full"
             >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
+              <X size={12} aria-hidden="true" />
+            </IconButton>
+          </Chip>
         ))}
         <input
+          id={inputId}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => { if (inputValue) addTag(inputValue) }}
           placeholder={value.length === 0 ? 'Type and press Enter or comma' : ''}
-          className="min-w-32 flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 outline-hidden dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          className="min-w-32 flex-1 bg-transparent text-sm text-text placeholder:text-muted outline-hidden"
         />
       </div>
-      <p className="text-xs text-zinc-500">Press Enter or comma to add a tag</p>
+      <p className="text-xs text-muted">Press Enter or comma to add a tag</p>
     </div>
   )
 }
