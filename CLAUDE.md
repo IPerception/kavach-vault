@@ -204,8 +204,12 @@ SMTP credentials and port config live in `app_config` (encrypted with master key
 - Secrets (`byte[]`/`char[]`) must be zeroed after use — verify `SessionKeyStore.clear()` is called on every exit path (logout, lock, shutdown hook).
 - TOTP validation uses the samstevens library via `TotpService.isValidCode()` — never compare TOTP codes with `String.equals()`.
 - DEK re-encryption on master password change must be a single `@Transactional` method covering all credentials.
-- Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'; connect-src 'self' https://api.github.com` (the GitHub entry is
-  for the update check only; never add `unsafe-eval`/`unsafe-inline`). Zod runs with
+- Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'; style-src 'self' 'nonce-<per-request>'; connect-src 'self' https://api.github.com`
+  (the GitHub entry is for the update check only; never add `unsafe-eval`/`unsafe-inline`).
+  The style nonce exists because Radix dialogs lock scrolling via react-remove-scroll-bar,
+  which injects a `<style>` tag at runtime. `SpaController` serves index.html itself and
+  replaces `__CSP_NONCE__` in its `csp-nonce` meta tag; `src/cspNonce.ts` hands it to
+  `get-nonce`. Scripts get no nonce (`'self'` only). Zod runs with
   `jitless` (`src/zodConfig.ts`) so its eval probe does not trip the CSP.
 - Dependabot owns dependency versions declared in a manifest. It does NOT own Spring Boot
   BOM property overrides in the root `pom.xml` - those are maintained by hand. Read the
