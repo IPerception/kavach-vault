@@ -122,7 +122,7 @@
   --color-warn-text: var(--k-warn-text);
   --color-star-off: var(--k-star-off);
   --color-ring: var(--k-ring);
-  --shadow-panel: var(--k-shadow);
+  --shadow-surface: var(--k-shadow);
 
   /* TRANSITIONAL, removed in PR 11: the mode-dependent middle of the kavach-* ramp. */
   --color-kavach-400: var(--k-gold-400);

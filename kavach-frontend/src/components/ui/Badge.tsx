@@ -1,13 +1,13 @@
 import { type HTMLAttributes } from 'react'
-import { clsx } from 'clsx'
+import { cn } from './cn'
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'danger'
 
 const variants: Record<BadgeVariant, string> = {
-  default: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300',
-  success: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-  warning: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-  danger: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+  default: 'border-chip-border bg-chip text-soft',
+  success: 'border-transparent bg-ok-bar/15 text-ok-text',
+  warning: 'border-warn-border bg-warn-bg text-warn-text',
+  danger: 'border-transparent bg-weak-bar/15 text-weak-text',
 }
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -17,8 +17,8 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 export function Badge({ variant = 'default', className, children, ...props }: BadgeProps) {
   return (
     <span
-      className={clsx(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+      className={cn(
+        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
         variants[variant],
         className,
       )}
