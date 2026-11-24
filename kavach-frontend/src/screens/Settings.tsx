@@ -4,11 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { SmartphoneNfc, KeyRound, Palette, ChevronRight, X, Info, Download, Upload, FolderOpen, Clock } from 'lucide-react'
+import { SmartphoneNfc, KeyRound, ChevronRight, X, Info, Download, Upload, FolderOpen, Clock } from 'lucide-react'
 import { changePassword, setupTotp, confirmTotp } from '../api/auth'
 import { exportVault, importVault, importCsv } from '../api/credentials'
 import { getBackupDestination, setBackupDestination, clearBackupDestination, runBackupNow } from '../api/backup'
-import { useKavachStore, type KavachTheme } from '../store/useKavachStore'
+import { useKavachStore } from '../store/useKavachStore'
 import { EXPIRY_DAYS_KEY, EXPIRY_WARNING_KEY, DEFAULT_EXPIRY_DAYS, DEFAULT_WARNING_DAYS } from '../hooks/useExpiryCheck'
 import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -39,18 +39,10 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 type TotpResetStep = 'idle' | 'scanning' | 'done'
-type ActiveModal = 'password' | 'totp' | 'theme' | 'import' | 'backup' | 'expiry' | null
-
-const THEMES: { id: KavachTheme; label: string; color: string }[] = [
-  { id: 'amber',   label: 'Amber',   color: '#f59e0b' },
-  { id: 'sky',     label: 'Sky',     color: '#0ea5e9' },
-  { id: 'emerald', label: 'Emerald', color: '#10b981' },
-  { id: 'rose',    label: 'Rose',    color: '#f43f5e' },
-  { id: 'violet',  label: 'Violet',  color: '#8b5cf6' },
-]
+type ActiveModal = 'password' | 'totp' | 'import' | 'backup' | 'expiry' | null
 
 export function Settings() {
-  const { setStatus, theme, setTheme } = useKavachStore()
+  const { setStatus } = useKavachStore()
   const [activeModal, setActiveModal] = useState<ActiveModal>(null)
   const qc = useQueryClient()
 
@@ -253,13 +245,6 @@ export function Settings() {
       iconBg: 'bg-kavach-500/10',
       title: 'Authenticator app',
       description: 'Reset and re-enroll your TOTP authenticator',
-    },
-    {
-      key: 'theme' as const,
-      icon: <Palette className="h-5 w-5 text-kavach-500" />,
-      iconBg: 'bg-kavach-500/10',
-      title: 'Theme',
-      description: 'Choose your accent colour',
     },
     {
       key: 'export' as const,
@@ -661,42 +646,6 @@ export function Settings() {
                         <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
                         <Button type="button" onClick={saveExpiry}>Save</Button>
                       </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Theme picker */}
-                {activeModal === 'theme' && (
-                  <>
-                    <CardHeader>
-                      <CardTitle className="text-center font-bold underline text-kavach-500">
-                        Choose theme
-                      </CardTitle>
-                      <p className="mt-1 text-center text-sm text-zinc-400">
-                        Select an accent colour applied across the entire app.
-                      </p>
-                    </CardHeader>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      {THEMES.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => { setTheme(t.id); closeModal() }}
-                          className="flex flex-col items-center gap-2 rounded-lg p-3 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                        >
-                          <span
-                            className="flex h-10 w-10 items-center justify-center rounded-full"
-                            style={{ backgroundColor: t.color }}
-                          >
-                            {theme === t.id && (
-                              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </span>
-                          <span className="text-xs text-zinc-600 dark:text-zinc-300">{t.label}</span>
-                        </button>
-                      ))}
                     </div>
                   </>
                 )}
