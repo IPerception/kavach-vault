@@ -85,7 +85,7 @@ Tags are the one thing pushed to `main` directly - a tag is not a change to the 
    GitHub release with `Kavach-vX.Y.Z-windows-x64.zip`, `kavach-vX.Y.Z.jar` and
    `SHA256SUMS.txt`.
 4. Download and test the draft, then click Publish. Drafts are invisible to the in-app
-   update banner (it reads `releases/latest`), so users are notified only on Publish.
+   update check (it reads `releases/latest`), so users see a release only once published.
 
 A Java security refresh is just a new patch tag: setup-java runs with `check-latest`, so the
 workflow always bundles the newest Temurin 25 patch and nothing needs installing locally.
@@ -204,7 +204,9 @@ SMTP credentials and port config live in `app_config` (encrypted with master key
 - Secrets (`byte[]`/`char[]`) must be zeroed after use — verify `SessionKeyStore.clear()` is called on every exit path (logout, lock, shutdown hook).
 - TOTP validation uses the samstevens library via `TotpService.isValidCode()` — never compare TOTP codes with `String.equals()`.
 - DEK re-encryption on master password change must be a single `@Transactional` method covering all credentials.
-- Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'`.
+- Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'; connect-src 'self' https://api.github.com` (the GitHub entry is
+  for the update check only; never add `unsafe-eval`/`unsafe-inline`). Zod runs with
+  `jitless` (`src/zodConfig.ts`) so its eval probe does not trip the CSP.
 - Dependabot owns dependency versions declared in a manifest. It does NOT own Spring Boot
   BOM property overrides in the root `pom.xml` - those are maintained by hand. Read the
   comment above any such override before touching it, and re-check every one when upgrading
@@ -235,9 +237,10 @@ Current release: **v1.3.2**.
 - **Breach check** -- `HibpService` (HaveIBeenPwned k-anonymity range API).
 - **Password expiry reminders** -- `ExpiryBanner.tsx` + `useExpiryCheck`.
 - **Light/dark mode toggle**.
-- **Auto-update notification** -- `useUpdateCheck.ts` + `UpdateBanner.tsx`. Polls the
-  GitHub releases API on load and shows a dismissible banner. Notification only, no
-  auto-install.
+- **Update notification** -- `useUpdateCheck.ts`. Shipped as an automatic banner on load,
+  but the CSP blocked the request so it never worked in the packaged app. Replaced
+  2026-11-24 by a manual "Check for updates" button in Settings (`UpdateCheck.tsx`):
+  local-first, so GitHub is contacted only on click. Notification only, no auto-install.
 - **TOTP reveal flow** -- replaced the email OTP reveal with an authenticator app. See
   the TOTP Reveal Flow section above.
 
@@ -281,9 +284,12 @@ Maintenance release; no new features.
 ## Planned Features (in priority order)
 
 ### 1. UI redesign -- IN PROGRESS (start here)
-Status as of 2026-11-24: design approved, implementation plan written, no code yet.
-Next step: PR 1 of the plan (Tailwind 4 CSS-first `@theme` tokens + bundled fonts + gold
-accent, five accent themes removed), handed to `code-writer` with the plan.
+Status as of 2026-11-24: PR 1 (tokens, bundled fonts, gold accent, themes removed)
+merged as #42. The old `kavach-*` classes are a transitional gold ramp (400..700 darker
+in light mode for contrast) until PR 11; remaining zinc/grey styling is expected until
+PRs 5, 6 and 9. Next step: PR 3 (brand assets). Handoffs that add an npm dependency must
+say to install with Maven's bundled npm, or `npm ci` rejects the lockfile (in
+kavach-frontend, Bash: `PATH="$PWD/node:$PATH" node node/node_modules/npm/bin/npm-cli.js install`).
 
 - **Plan:** `docs/notes/redesign-plan.md` (gitignored, local). Ordered PRs, files, tests,
   risks. Read its ADDENDUM at the end first -- it records later user decisions.

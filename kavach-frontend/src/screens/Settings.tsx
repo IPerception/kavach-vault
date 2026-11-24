@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
+import { UpdateCheck } from '../components/UpdateCheck'
 import type { ImportResult, TotpSetupData, VaultExport } from '../api/types'
 
 const PASSWORD_RULES = 'Must be at least 12 characters and contain uppercase, lowercase, digit, and special character.'
@@ -301,6 +302,8 @@ export function Settings() {
           ))}
         </ul>
       </Card>
+
+      <UpdateCheck />
 
       {exportError && (
         <p className="mt-2 text-xs text-red-400">{exportError}</p>
