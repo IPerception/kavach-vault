@@ -1,11 +1,165 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
 
+/* Class-based dark mode: useKavachStore and main.tsx toggle `dark` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Raw design tokens, copied from the approved prototype. Light is the default. */
 :root {
   color-scheme: light;
+  --k-bg: #F7F6F2;
+  --k-side: #F0EDE6;
+  --k-panel: #FFFFFF;
+  --k-raised: #FFFFFF;
+  --k-input: #FFFFFF;
+  --k-border: #E2DED4;
+  --k-line: #EFECE6;
+  --k-text: #1C1F24;
+  --k-soft: #3D4249;
+  --k-muted: #5E636B;
+  --k-nav-active: #FFFFFF;
+  --k-chip: #F1EEE7;
+  --k-chip-border: #F1EEE7;
+  --k-row-hover: #FAF8F4;
+  --k-tile: #E6ECF5;
+  --k-tile-fg: #1E3354;
+  --k-track: #E8E5DE;
+  --k-accent: #C99A3B;
+  --k-accent-fg: #1A1406;
+  --k-accent-line: #B8892E;
+  --k-accent-text: #85621A;
+  --k-ok-bar: #2DA44E;
+  --k-ok-text: #1A7F37;
+  --k-fair-bar: #D29922;
+  --k-fair-text: #8A5A00;
+  --k-weak-bar: #E5534B;
+  --k-weak-text: #C4282F;
+  --k-warn-bg: #FDF4E3;
+  --k-warn-border: #F0DDB5;
+  --k-warn-text: #7A4D00;
+  --k-star-off: #B8B3A8;
+  --k-ring: #85621A;
+  --k-shadow: 0 1px 2px rgba(28,31,36,0.05), 0 12px 32px rgba(28,31,36,0.07);
+  /* TRANSITIONAL kavach-400..700, shifted darker in light mode so gold text on white
+     stays readable (500 = accent-text, ~5.6:1). Same idea as the v1.3.0 contrast fix. */
+  --k-gold-400: #C99A3B;
+  --k-gold-500: #85621A;
+  --k-gold-600: #6B4F15;
+  --k-gold-700: #523C10;
 }
 :root.dark {
   color-scheme: dark;
+  --k-bg: #0B0E13;
+  --k-side: #0D1117;
+  --k-panel: #10141B;
+  --k-raised: #151A22;
+  --k-input: #0B0E13;
+  --k-border: #1F2630;
+  --k-line: #161B23;
+  --k-text: #E6E8EB;
+  --k-soft: #C3C9D2;
+  --k-muted: #9AA3B0;
+  --k-nav-active: #1A202A;
+  --k-chip: #1D2532;
+  --k-chip-border: #2C3746;
+  --k-row-hover: #151B24;
+  --k-tile: #1E2A3D;
+  --k-tile-fg: #AFC6EA;
+  --k-track: #232932;
+  --k-accent: #D4A94A;
+  --k-accent-fg: #1A1406;
+  --k-accent-line: #D4A94A;
+  --k-accent-text: #E2BE6E;
+  --k-ok-bar: #3FB950;
+  --k-ok-text: #7EE2A8;
+  --k-fair-bar: #D29922;
+  --k-fair-text: #E8C26B;
+  --k-weak-bar: #F85149;
+  --k-weak-text: #FF8B84;
+  --k-warn-bg: #241C0C;
+  --k-warn-border: #4A3812;
+  --k-warn-text: #E8C26B;
+  --k-star-off: #3A424E;
+  --k-ring: #D4A94A;
+  --k-shadow: none;
+  --k-gold-400: #E2BE6E;
+  --k-gold-500: #D4A94A;
+  --k-gold-600: #C99A3B;
+  --k-gold-700: #85621A;
+}
+
+/* Utilities (bg-bg, text-soft, border-line, ...). `inline` keeps the var() reference so
+   opacity modifiers such as bg-accent/10 still work and dark mode flips the value. */
+@theme inline {
+  --color-bg: var(--k-bg);
+  --color-side: var(--k-side);
+  --color-panel: var(--k-panel);
+  --color-raised: var(--k-raised);
+  --color-input: var(--k-input);
+  --color-border: var(--k-border);
+  --color-line: var(--k-line);
+  --color-text: var(--k-text);
+  --color-soft: var(--k-soft);
+  --color-muted: var(--k-muted);
+  --color-nav-active: var(--k-nav-active);
+  --color-chip: var(--k-chip);
+  --color-chip-border: var(--k-chip-border);
+  --color-row-hover: var(--k-row-hover);
+  --color-tile: var(--k-tile);
+  --color-tile-fg: var(--k-tile-fg);
+  --color-track: var(--k-track);
+  --color-accent: var(--k-accent);
+  --color-accent-fg: var(--k-accent-fg);
+  --color-accent-line: var(--k-accent-line);
+  --color-accent-text: var(--k-accent-text);
+  --color-ok-bar: var(--k-ok-bar);
+  --color-ok-text: var(--k-ok-text);
+  --color-fair-bar: var(--k-fair-bar);
+  --color-fair-text: var(--k-fair-text);
+  --color-weak-bar: var(--k-weak-bar);
+  --color-weak-text: var(--k-weak-text);
+  --color-warn-bg: var(--k-warn-bg);
+  --color-warn-border: var(--k-warn-border);
+  --color-warn-text: var(--k-warn-text);
+  --color-star-off: var(--k-star-off);
+  --color-ring: var(--k-ring);
+  --shadow-panel: var(--k-shadow);
+
+  /* TRANSITIONAL, removed in PR 11: the mode-dependent middle of the kavach-* ramp. */
+  --color-kavach-400: var(--k-gold-400);
+  --color-kavach-500: var(--k-gold-500);
+  --color-kavach-600: var(--k-gold-600);
+  --color-kavach-700: var(--k-gold-700);
+}
+
+@theme {
+  /* Brand constants (the logo) */
+  --color-navy: #1E3354;
+  --color-gold: #D4A94A;
+
+  /* TRANSITIONAL: the old kavach-* accent classes now resolve to a gold ramp (400..700
+     are mode-dependent, see @theme inline above). Removed in PR 11 once nothing
+     references them. */
+  --color-kavach-50: #FBF5E6;
+  --color-kavach-100: #F6EACB;
+  --color-kavach-200: #EEDAA2;
+  --color-kavach-300: #E8CB88;
+  --color-kavach-800: #6B4F15;
+  --color-kavach-900: #523C10;
+  --color-kavach-950: #3A2A0A;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Fraunces', Georgia, serif;
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 17px;
+  --text-xl: 20px;
+
+  --radius-control: 6px;
+  --radius-panel: 10px;
 }
 
 * {
@@ -23,101 +177,9 @@
 }
 
 body {
-  background-color: #f4f4f5;
-  background-image: radial-gradient(rgb(212 212 216 / 0.6) 1px, transparent 1px);
-  background-size: 4px 4px;
-}
-.dark body {
-  background-color: #09090b;
-  background-image: radial-gradient(rgb(63 63 70 / 0.45) 1px, transparent 1px);
-}
-
-/* Amber (default) */
-:root, [data-theme="amber"] {
-  --kavach-50:  255 251 235;
-  --kavach-950: 120 53 15;
-}
-.dark[data-theme="amber"], .dark:root {
-  --kavach-400: 251 191 36;
-  --kavach-500: 245 158 11;
-  --kavach-600: 217 119 6;
-  --kavach-700: 180 83 9;
-}
-[data-theme="amber"]:not(.dark), :root:not(.dark) {
-  --kavach-400: 245 158 11;
-  --kavach-500: 180 83 9;
-  --kavach-600: 154 52 18;
-  --kavach-700: 120 53 15;
-}
-
-/* Sky */
-[data-theme="sky"] {
-  --kavach-50:  240 249 255;
-  --kavach-950: 8 47 73;
-}
-.dark[data-theme="sky"] {
-  --kavach-400: 56 189 248;
-  --kavach-500: 14 165 233;
-  --kavach-600: 2 132 199;
-  --kavach-700: 3 105 161;
-}
-[data-theme="sky"]:not(.dark) {
-  --kavach-400: 14 165 233;
-  --kavach-500: 2 132 199;
-  --kavach-600: 3 105 161;
-  --kavach-700: 7 89 133;
-}
-
-/* Emerald */
-[data-theme="emerald"] {
-  --kavach-50:  236 253 245;
-  --kavach-950: 2 44 34;
-}
-.dark[data-theme="emerald"] {
-  --kavach-400: 52 211 153;
-  --kavach-500: 16 185 129;
-  --kavach-600: 5 150 105;
-  --kavach-700: 4 120 87;
-}
-[data-theme="emerald"]:not(.dark) {
-  --kavach-400: 16 185 129;
-  --kavach-500: 5 150 105;
-  --kavach-600: 4 120 87;
-  --kavach-700: 6 95 70;
-}
-
-/* Rose */
-[data-theme="rose"] {
-  --kavach-50:  255 241 242;
-  --kavach-950: 76 5 25;
-}
-.dark[data-theme="rose"] {
-  --kavach-400: 251 113 133;
-  --kavach-500: 244 63 94;
-  --kavach-600: 225 29 72;
-  --kavach-700: 190 18 60;
-}
-[data-theme="rose"]:not(.dark) {
-  --kavach-400: 244 63 94;
-  --kavach-500: 225 29 72;
-  --kavach-600: 190 18 60;
-  --kavach-700: 159 18 57;
-}
-
-/* Violet */
-[data-theme="violet"] {
-  --kavach-50:  245 243 255;
-  --kavach-950: 46 16 101;
-}
-.dark[data-theme="violet"] {
-  --kavach-400: 167 139 250;
-  --kavach-500: 139 92 246;
-  --kavach-600: 124 58 237;
-  --kavach-700: 109 40 217;
-}
-[data-theme="violet"]:not(.dark) {
-  --kavach-400: 139 92 246;
-  --kavach-500: 124 58 237;
-  --kavach-600: 109 40 217;
-  --kavach-700: 91 33 182;
+  background-color: var(--k-bg);
+  color: var(--k-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
 }

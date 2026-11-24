@@ -17,6 +17,9 @@ export default defineConfig({
     // the default 500 KB advisory stops printing [ERROR] lines in the Maven build.
     // Revisit if the bundle grows well past this.
     chunkSizeWarningLimit: 800,
+    // The CSP (default-src 'self') blocks data: URIs, which is what Vite inlines for
+    // assets under 4 KB. Emit every asset as a file.
+    assetsInlineLimit: 0,
   },
   server: {
     proxy: {
