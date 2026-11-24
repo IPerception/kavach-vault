@@ -284,10 +284,13 @@ Maintenance release; no new features.
 ## Planned Features (in priority order)
 
 ### 1. UI redesign -- IN PROGRESS (start here)
-Status as of 2026-11-24: PR 1 (tokens, bundled fonts, gold accent, themes removed)
-merged as #42. The old `kavach-*` classes are a transitional gold ramp (400..700 darker
-in light mode for contrast) until PR 11; remaining zinc/grey styling is expected until
-PRs 5, 6 and 9. Next step: PR 3 (brand assets). Handoffs that add an npm dependency must
+Status as of 2026-11-24: merged PR 1 (#42 tokens, fonts, gold accent), PR 3 (#44 logo
+mark, favicon, setup webp, scripts/icons), PR 4+5 (#45 exe icon, UI primitives in
+src/components/ui) and PR 6 (#46 sidebar shell, status bar, lib/attention.ts). Password
+age now comes from `passwordChangedAt` (see Planned #2). The old `kavach-*` classes are a
+transitional gold ramp until PR 11; screen contents keep zinc styling until PRs 7-10.
+Next: PR 7 + PR 10 batched (forms; Audit + Health), then PR 8, PR 9, PR 11 separately.
+Known follow-up for PR 9: the sidebar Health count is amber even at 0. Handoffs that add an npm dependency must
 say to install with Maven's bundled npm, or `npm ci` rejects the lockfile (in
 kavach-frontend, Bash: `PATH="$PWD/node:$PATH" node node/node_modules/npm/bin/npm-cli.js install`).
 
@@ -317,13 +320,13 @@ kavach-frontend, Bash: `PATH="$PWD/node:$PATH" node node/node_modules/npm/bin/np
   the master key).
 - **Set aside:** pure A ("Quiet"), B and C directions; the five accent themes.
 
-### 2. Password age = password changes only
-"Not changed in 90+ days" (expiry banner, redesign's "need attention") must track the
-password, not any field: editing a username/URL resets `updatedAt` today. Add
-`credential.password_changed_at` (Liquibase, backfilled from `updated_at`), set on create
-and when an update changes the password -- NOT on master-password change (that re-encrypts
-DEKs but changes no password). Expose on CredentialSummaryDto. Lands before the redesign's
-Dashboard PR. (Starring no longer resets `updatedAt` -- fixed in #40.)
+### 2. Password age = password changes only -- DONE (feat/password-changed-at)
+`credential.password_changed_at` (changeset 012, backfilled from `updated_at`) is set on
+create/import and only when an update supplies a DIFFERENT password (compared in constant
+time after decrypting the current one; re-typing the same password keeps its age). Not
+touched by master-password change or starring. On CredentialSummaryDto and
+CredentialHealthDto; the frontend reads it only through `passwordAgeDate()` in
+`src/lib/attention.ts` (falls back to `updatedAt` if null). Move to Completed on release.
 
 ### 3. Code signing for Kavach.exe -- required before sharing the download
 Windows Smart App Control blocks the unsigned jpackage launcher whenever the release zip

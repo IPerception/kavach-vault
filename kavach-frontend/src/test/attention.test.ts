@@ -40,8 +40,14 @@ describe('strengthBucket', () => {
 })
 
 describe('passwordAgeDate', () => {
-  // The backend PR that adds passwordChangedAt switches this seam; update this test with it.
-  it('currently reads updatedAt', () => {
+  it('prefers passwordChangedAt over updatedAt', () => {
+    expect(
+      passwordAgeDate({ updatedAt: '2026-01-02T03:04:05Z', passwordChangedAt: '2025-06-01T00:00:00Z' }),
+    ).toBe('2025-06-01T00:00:00Z')
+  })
+
+  it('falls back to updatedAt when passwordChangedAt is null or missing', () => {
+    expect(passwordAgeDate({ updatedAt: '2026-01-02T03:04:05Z', passwordChangedAt: null })).toBe('2026-01-02T03:04:05Z')
     expect(passwordAgeDate({ updatedAt: '2026-01-02T03:04:05Z' })).toBe('2026-01-02T03:04:05Z')
   })
 })

@@ -97,6 +97,7 @@ public class CredentialService {
                 .dekEncrypted(dekEncrypted)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .passwordChangedAt(LocalDateTime.now())
                 .build();
 
         try {
@@ -130,6 +131,7 @@ public class CredentialService {
                 .dekEncrypted(dekEncrypted)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .passwordChangedAt(LocalDateTime.now())
                 .build();
 
         try {
@@ -169,17 +171,27 @@ public class CredentialService {
         credential.setNotes(request.getNotes());
         credential.setTags(joinTags(request.getTags()));
 
+        LocalDateTime now = LocalDateTime.now();
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             SecretKey masterKey = sessionKeyStore.getKey();
-            byte[] dek = encryptionService.generateDek();
-            SecretKey dekKey = encryptionService.bytesToKey(dek);
-            byte[] encryptedPassword = encryptionService.encrypt(request.getPassword().getBytes(), dekKey);
-            byte[] dekEncrypted = encryptionService.encrypt(dek, masterKey);
-            credential.setEncryptedPassword(encryptedPassword);
-            credential.setDekEncrypted(dekEncrypted);
+            byte[] newPassword = request.getPassword().getBytes();
+            try {
+                // Re-typing the current password must not reset its age.
+                if (passwordDiffers(credential, newPassword, masterKey)) {
+                    credential.setPasswordChangedAt(now);
+                }
+                byte[] dek = encryptionService.generateDek();
+                SecretKey dekKey = encryptionService.bytesToKey(dek);
+                byte[] encryptedPassword = encryptionService.encrypt(newPassword, dekKey);
+                byte[] dekEncrypted = encryptionService.encrypt(dek, masterKey);
+                credential.setEncryptedPassword(encryptedPassword);
+                credential.setDekEncrypted(dekEncrypted);
+            } finally {
+                Arrays.fill(newPassword, (byte) 0);
+            }
         }
 
-        credential.setUpdatedAt(LocalDateTime.now());
+        credential.setUpdatedAt(now);
 
         credential = credentialRepository.save(credential);
         eventPublisher.publishEvent(new AuditEvent(user, AuditAction.UPDATE, null));
@@ -330,6 +342,7 @@ public class CredentialService {
                     .strengthLabel(strengthLabel(score))
                     .duplicate(duplicateIds.contains(c.getId()))
                     .updatedAt(c.getUpdatedAt())
+                    .passwordChangedAt(c.getPasswordChangedAt())
                     .build());
         }
         return report;
@@ -360,6 +373,20 @@ public class CredentialService {
                     .build());
         }
         return results;
+    }
+
+    private boolean passwordDiffers(Credential credential, byte[] newPassword, SecretKey masterKey) {
+        byte[] dek = null;
+        byte[] current = null;
+        try {
+            dek = encryptionService.decrypt(credential.getDekEncrypted(), masterKey);
+            SecretKey dekKey = encryptionService.bytesToKey(dek);
+            current = encryptionService.decrypt(credential.getEncryptedPassword(), dekKey);
+            return !MessageDigest.isEqual(current, newPassword);
+        } finally {
+            if (dek != null) Arrays.fill(dek, (byte) 0);
+            if (current != null) Arrays.fill(current, (byte) 0);
+        }
     }
 
     private int scorePassword(byte[] pw) {

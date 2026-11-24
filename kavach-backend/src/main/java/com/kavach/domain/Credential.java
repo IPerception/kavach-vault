@@ -86,4 +86,7 @@ public class Credential {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;
 }
