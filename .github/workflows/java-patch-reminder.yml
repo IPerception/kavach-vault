@@ -1,0 +1,77 @@
+# Weekly check: does a newer Temurin 25 build exist than the one bundled in
+# the latest published release? If so, open (once) an issue saying a patch
+# release is due.
+#
+# The bundled version comes from the release notes, which release.yml writes
+# as "Bundled Java runtime: Temurin <version>". The newest version comes from
+# the Adoptium API for the same platform release.yml builds (Windows x64).
+#
+# Acting on the issue: bump the version (patch), merge, push the tag. The
+# release workflow picks up the newest Temurin 25 by itself (check-latest).
+name: Java patch reminder
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare bundled and latest Temurin 25
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          RELEASE=$(gh api "repos/$GH_REPO/releases/latest")
+          TAG=$(jq -r .tag_name <<< "$RELEASE")
+          BUNDLED=$(jq -r .body <<< "$RELEASE" \
+            | sed -n 's/.*Bundled Java runtime: Temurin \([0-9][0-9.]*\).*/\1/p' | head -1)
+          if [ -z "$BUNDLED" ]; then
+            echo "::notice::$TAG notes do not state the bundled runtime (pre-workflow release); nothing to compare."
+            exit 0
+          fi
+
+          # major.minor.security, plus .patch when Adoptium ships a respin (e.g. 25.0.5.1).
+          LATEST=$(curl -fsS "https://api.adoptium.net/v3/assets/latest/25/hotspot?os=windows&architecture=x64&image_type=jdk" \
+            | jq -r '.[0].version | "\(.major).\(.minor).\(.security)" + (if (.patch // 0) > 0 then ".\(.patch)" else "" end)')
+
+          echo "Latest release: $TAG, bundles Temurin $BUNDLED"
+          echo "Latest Temurin 25 (Windows x64): $LATEST"
+
+          NEWEST=$(printf '%s\n%s\n' "$BUNDLED" "$LATEST" | sort -V | tail -1)
+          if [ "$LATEST" = "$BUNDLED" ] || [ "$NEWEST" = "$BUNDLED" ]; then
+            echo "Up to date."
+            exit 0
+          fi
+
+          TITLE="Java runtime update: Temurin $LATEST available ($TAG bundles $BUNDLED)"
+          if gh issue list --state open --search "\"Temurin $LATEST available\" in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "Issue already open for $LATEST."
+            exit 0
+          fi
+
+          gh issue create --title "$TITLE" --body "$(cat <<EOF
+          The latest published release, **$TAG**, bundles Eclipse Temurin **$BUNDLED**.
+          Temurin **$LATEST** is now available for Windows x64.
+
+          Java patch builds usually carry security fixes (Oracle's quarterly
+          Critical Patch Update: January, April, July, October), so ship a patch release:
+
+          1. PR bumping the version (patch) in the five places VersionConsistencyTest checks.
+          2. Merge, then \`git tag vX.Y.Z && git push origin vX.Y.Z\`.
+          3. The Release workflow builds with the newest Temurin 25. Check the draft's
+             notes say "Temurin $LATEST", try the zip, then Publish.
+
+          Opened by .github/workflows/java-patch-reminder.yml. It will not reopen for the
+          same version; close this once the release is published.
+          EOF
+          )"
