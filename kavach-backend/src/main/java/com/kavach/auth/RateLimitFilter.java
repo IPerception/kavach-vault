@@ -1,9 +1,8 @@
 package com.kavach.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,7 +48,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private Bucket newBucket() {
         // Refill all tokens at once after the window expires (hard lockout behaviour).
-        Bandwidth limit = Bandwidth.classic(maxAttempts, Refill.intervally(maxAttempts, WINDOW));
+        Bandwidth limit = Bandwidth.builder().capacity(maxAttempts).refillIntervally(maxAttempts, WINDOW).build();
         return Bucket.builder().addLimit(limit).build();
     }
 

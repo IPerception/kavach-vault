@@ -1,6 +1,6 @@
 package com.kavach.otp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.kavach.auth.JwtService;
 import com.kavach.crypto.SessionKeyStore;
 import com.kavach.dto.request.CreateCredentialRequest;
@@ -16,9 +16,9 @@ import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +43,7 @@ class OtpControllerTest {
     @Autowired CredentialRepository credentialRepository;
     @Autowired SessionKeyStore sessionKeyStore;
     @Autowired JwtService jwtService;
-    @MockBean TotpProvider totpProvider;
+    @MockitoBean TotpProvider totpProvider;
 
     private Cookie jwtCookie;
     private long credentialId;

@@ -93,3 +93,7 @@ If forgotten, vault data is unrecoverable.
 - The vault auto-locks after 10 minutes of inactivity.
 
 See `docs/ARCHITECTURE.md` and `docs/ENCRYPTION.md` for full technical details.
+
+## Licence
+
+Kavach is released under the MIT licence (see `LICENSE`). Bundled third-party components that are under other licences, including Liquibase, are listed in `THIRD-PARTY-NOTICES.md`.

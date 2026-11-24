@@ -18,7 +18,7 @@
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -50,8 +50,8 @@
 
         <!-- Liquibase -->
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
         </dependency>
 
         <!-- JWT -->
@@ -76,7 +76,7 @@
         <!-- Rate Limiting -->
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>
 
@@ -137,8 +137,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -147,6 +157,20 @@
         <!-- The Spring Boot fat jar is the single distributable artifact. -->
         <finalName>kavach</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <!-- sqlite-jdbc loads a native library. JDK 24+ warns about that
+                                 (JEP 472) on java -jar launches; this grants it explicitly.
+                                 jpackage launchers ignore the manifest and use the java-options argument. -->
+                            <Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -161,11 +185,22 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>resolve-jar-properties</id>
+                        <goals><goal>properties</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Mockito 5 on JDK 21+ cannot self-attach. Load mockito-core
-                         as a Java agent so the inline mock maker works without warnings. -->
-                    <argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <!-- Mockito 5 on JDK 21+ (incl. 25) cannot self-attach. Load mockito-core
+                         as a Java agent so the inline mock maker works without warnings.
+                         ${org.mockito:mockito-core:jar} is set by dependency:properties. -->
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar} --enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -212,7 +247,7 @@
             The default is the platform-native format; app-image works on all platforms
             without extra tooling (no WiX/dpkg needed).
 
-            Prerequisites: JDK 21 (jpackage is included). On Windows, install WiX 3.x from
+            Prerequisites: JDK 25 (jpackage is included). On Windows, install WiX 3.x from
             wixtoolset.org for .msi output. On Linux, install dpkg-dev or rpm for .deb/.rpm.
         -->
         <profile>
@@ -248,7 +283,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.6.3</version>
+                        <version>3.7.0</version>
                         <executions>
                             <execution>
                                 <id>jpackage</id>
