@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useKavachStore } from '../store/useKavachStore'
 
-const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
+export const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
 const CHECK_INTERVAL_MS = 30_000
 
 export function useInactivityWatcher() {

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { listCredentials } from '../api/credentials'
 import type { CredentialSummary } from '../api/types'
+import { daysSince, passwordAgeDate } from '../lib/attention'
 
 export const EXPIRY_DAYS_KEY = 'kavach_expiry_days'
 export const EXPIRY_WARNING_KEY = 'kavach_expiry_warning_days'
@@ -13,10 +14,6 @@ export function getExpiryDays(): number {
 
 export function getWarningDays(): number {
   return parseInt(localStorage.getItem(EXPIRY_WARNING_KEY) ?? String(DEFAULT_WARNING_DAYS))
-}
-
-function daysSince(iso: string): number {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
 }
 
 export interface ExpiryCheckResult {
@@ -37,9 +34,9 @@ export function useExpiryCheck(): ExpiryCheckResult {
 
   const passwords = credentials.filter((c) => c.credentialType !== 'NOTE')
 
-  const expired = passwords.filter((c) => daysSince(c.updatedAt) >= expiryDays)
+  const expired = passwords.filter((c) => daysSince(passwordAgeDate(c)) >= expiryDays)
   const expiringSoon = passwords.filter((c) => {
-    const days = daysSince(c.updatedAt)
+    const days = daysSince(passwordAgeDate(c))
     return days >= expiryDays - warningDays && days < expiryDays
   })
 

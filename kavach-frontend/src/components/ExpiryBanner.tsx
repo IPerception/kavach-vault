@@ -1,12 +1,17 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Clock, X } from 'lucide-react'
 import { useExpiryCheck } from '../hooks/useExpiryCheck'
+import { IconButton } from './ui/IconButton'
+import { cn } from './ui/cn'
 
 export function ExpiryBanner() {
   const [dismissed, setDismissed] = useState(false)
+  const { pathname } = useLocation()
   const { expired, expiringSoon } = useExpiryCheck()
 
+  // The dashboard's summary strip carries the same signal.
+  if (pathname === '/dashboard') return null
   if (dismissed || (expired.length === 0 && expiringSoon.length === 0)) return null
 
   const isUrgent = expired.length > 0
@@ -19,35 +24,28 @@ export function ExpiryBanner() {
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 border-b px-4 py-2 ${
-        isUrgent
-          ? 'border-red-500/30 bg-red-500/10'
-          : 'border-amber-500/30 bg-amber-500/10'
-      }`}
+      className={cn(
+        'flex items-center justify-between gap-3 rounded-panel border px-4 py-2',
+        isUrgent ? 'border-weak-bar/40 bg-weak-bar/10' : 'border-warn-border bg-warn-bg',
+      )}
     >
-      <div
-        className={`flex items-center gap-2 text-sm ${
-          isUrgent ? 'text-red-300' : 'text-amber-300'
-        }`}
-      >
-        <Clock className={`h-4 w-4 shrink-0 ${isUrgent ? 'text-red-400' : 'text-amber-400'}`} />
+      <div className={cn('flex items-center gap-2 text-sm', isUrgent ? 'text-weak-text' : 'text-warn-text')}>
+        <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
           {parts.join(', ')}.{' '}
           <Link to="/health" className="underline hover:opacity-80">
-            Review in Password Health
+            Review in Health
           </Link>
         </span>
       </div>
-      <button
-        type="button"
-        aria-label="Dismiss expiry notification"
+      <IconButton
+        label="Dismiss expiry notification"
+        tooltip={false}
+        className={isUrgent ? 'text-weak-text' : 'text-warn-text'}
         onClick={() => setDismissed(true)}
-        className={`shrink-0 rounded-sm p-0.5 hover:opacity-80 ${
-          isUrgent ? 'text-red-400 hover:bg-red-500/20' : 'text-amber-400 hover:bg-amber-500/20'
-        }`}
       >
-        <X className="h-3.5 w-3.5" />
-      </button>
+        <X className="h-3.5 w-3.5" aria-hidden="true" />
+      </IconButton>
     </div>
   )
 }
