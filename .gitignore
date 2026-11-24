@@ -42,3 +42,6 @@ Thumbs.db
 
 # Scratch working notes (plans, research). The rest of docs/ is tracked.
 docs/notes/
+
+# Icon generator tool
+scripts/icons/node_modules/

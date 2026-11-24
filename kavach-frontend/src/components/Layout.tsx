@@ -4,6 +4,7 @@ import { useKavachStore } from '../store/useKavachStore'
 import { useInactivityWatcher } from '../hooks/useInactivityWatcher'
 import { ExpiryBanner } from './ExpiryBanner'
 import { Button } from './ui/Button'
+import { KavachMark } from './brand/KavachMark'
 import { clsx } from 'clsx'
 
 const navItems = [
@@ -24,7 +25,7 @@ export function Layout() {
         <header className="border-b border-zinc-200 border-t-2 border-t-kavach-500 bg-white dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center justify-between px-4 py-3">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img src="/Kavach-Logo.png" alt="Kavach" className="h-7 w-7 object-contain" />
+              <KavachMark size={24} decorative />
               <span className="text-base font-bold tracking-widest text-kavach-500 uppercase">
                 Kavach
               </span>

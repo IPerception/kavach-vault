@@ -1,0 +1,13 @@
+{
+  "name": "kavach-icons",
+  "private": true,
+  "type": "module",
+  "description": "Generates Kavach icon and image assets. Not part of the app build.",
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.35.5"
+  }
+}

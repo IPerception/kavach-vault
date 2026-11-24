@@ -90,7 +90,9 @@ export function SetupWizard() {
           {/* Left column - logo panel */}
           <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
             <img
-              src="/Kavach-Logo.png"
+              src="/kavach-setup.webp"
+              width={768}
+              height={768}
               alt="Kavach"
               className="absolute inset-0 h-full w-full object-cover"
             />
@@ -180,7 +182,9 @@ function TotpSetupStep({ data, onReset, onComplete }: TotpSetupStepProps) {
           {/* Left column - logo panel */}
           <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
             <img
-              src="/Kavach-Logo.png"
+              src="/kavach-setup.webp"
+              width={768}
+              height={768}
               alt="Kavach"
               className="absolute inset-0 h-full w-full object-cover"
             />
