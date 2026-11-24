@@ -10,7 +10,7 @@ All data stays on your machine — no cloud, no external services except optiona
 **Option 1 — Native installer (recommended)**
 
 Build the self-contained app-image (bundles its own JRE; no Java required on the machine).
-Bundled runtime: Eclipse Temurin 21.0.9 (OpenJDK, free for personal and commercial use).
+Bundled runtime: Eclipse Temurin 25 (OpenJDK, free for personal and commercial use). The exact patch version is listed in each release's notes.
 
 ```bash
 mvn clean install -P native-installer
@@ -20,7 +20,8 @@ Output: `dist/Kavach/Kavach.exe` (Windows). Launch it directly.
 
 **Option 2 — JAR**
 
-Requires Java 21 or later.
+Requires Java 25 or later (older versions fail with `UnsupportedClassVersionError`).
+The released Windows zip bundles its own runtime and needs no Java.
 
 ```bash
 mvn clean package
@@ -57,6 +58,18 @@ The database and config live in `~/.kavach/` (created on first launch):
 | Linux    | `~/.kavach/kavach.db`             |
 
 The database is backed up automatically on each startup (last 5 copies kept).
+
+### Backups
+
+For a full backup of `~/.kavach` (database, WAL files, TLS keystore), close Kavach and run
+`scripts/backup-kavach.ps1` in PowerShell. It writes a verified, timestamped zip to
+`~\KavachBackups` by default and keeps the newest 10 (`-Destination` and `-Keep` override
+this). It refuses to run while Kavach is open. The zip contains TLS key material, so keep
+the destination private.
+
+```powershell
+.\scripts\backup-kavach.ps1 -Destination D:\Backups\Kavach -Keep 20
+```
 
 ---
 

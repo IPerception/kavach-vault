@@ -35,6 +35,12 @@ cd kavach-frontend && npm test
 cd kavach-frontend && npx vitest run src/hooks/useOtpFlow.test.ts
 ```
 
+The backend needs Java 25 (Spring Boot 4.1.3). The Maven build downloads Node v24.22.3 into
+`kavach-frontend/node/`; after changing `nodeVersion`, delete that directory before the next
+build (see the comment in `kavach-frontend/pom.xml`).
+
+CI (`.github/workflows/ci.yml`) runs `mvn -B clean verify` on every PR and push to `main`.
+
 The launcher script (`start.bat` / `start.sh`) tries ports 8080 → 8090 → 8100 on conflict and auto-backs up `kavach.db` on startup (retains last 5 copies).
 
 ## Contributing Workflow
@@ -58,32 +64,40 @@ Verify before committing, not after. Only the merge to `main` is done by the rep
 
 ## Releasing
 
-Releases are cut from `main` after the change PRs have merged. Tags are the one thing
-pushed to `main` directly - a tag is not a change to the tree.
+Releases are built by `.github/workflows/release.yml`, triggered by a `vX.Y.Z` tag.
+Tags are the one thing pushed to `main` directly - a tag is not a change to the tree.
 
-```bash
-# 1. Build the app-image (from project root)
-mvn clean install -P native-installer
+1. In a PR, bump the version in all five places (guarded by
+   `kavach-backend/src/test/java/com/kavach/VersionConsistencyTest.java`): root `pom.xml`
+   `<version>`, the `<parent><version>` in both child poms, and `"version"` in
+   `kavach-frontend/package.json` and `package-lock.json`. jpackage's `--app-version` uses
+   `${project.version}`.
+2. Merge the PR, then tag main and push the tag:
 
-# 2. Delete any runtime files left in dist/Kavach/ from testing (kavach.port, kavach.db)
-# 3. Zip dist/Kavach/ manually via File Explorer -> right-click -> Compress to ZIP
-#    Name it: Kavach-vX.Y.Z-windows-x64.zip
+   ```bash
+   git checkout main && git pull
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
 
-# 4. With all change PRs merged, tag main and push the tag
-git checkout main && git pull
-git tag vX.Y.Z
-git push origin vX.Y.Z
+3. The workflow checks the tag is on `main` and equals the root pom version, reruns all
+   tests, builds the Windows app-image on the latest Temurin 25, and creates a **draft**
+   GitHub release with `Kavach-vX.Y.Z-windows-x64.zip`, `kavach-vX.Y.Z.jar` and
+   `SHA256SUMS.txt`.
+4. Download and test the draft, then click Publish. Drafts are invisible to the in-app
+   update banner (it reads `releases/latest`), so users are notified only on Publish.
 
-# 5. Create GitHub release with the zip as a release asset
-gh release create vX.Y.Z "dist/Kavach-vX.Y.Z-windows-x64.zip" \
-  --title "Kavach vX.Y.Z" \
-  --notes "Release notes here"
-```
+A Java security refresh is just a new patch tag: setup-java runs with `check-latest`, so the
+workflow always bundles the newest Temurin 25 patch and nothing needs installing locally.
+`.github/workflows/java-patch-reminder.yml` checks weekly and opens an issue when Adoptium
+has a newer Temurin 25 than the latest release bundles.
 
 Notes:
+- Do not build or zip releases by hand any more; use the workflow.
+- Local `mvn clean install -P native-installer` still produces `dist/Kavach/` for testing;
+  `dist/` is gitignored.
 - WiX 3.x is installed at C:\Program Files (x86)\WiX Toolset v3.14\bin -- add to PATH to build .exe installers
 - .exe installer format is blocked by Windows Smart App Control; use app-image (default) for distribution
-- dist/ is gitignored; the zip is attached only as a GitHub release asset
 
 Swagger UI available at `https://localhost:8080/swagger-ui.html` during development.
 
@@ -92,8 +106,8 @@ Swagger UI available at `https://localhost:8080/swagger-ui.html` during developm
 ### Module Layout (Maven multi-module)
 
 ```
-kavach-backend/   — Spring Boot 3.x, Java 21
-kavach-frontend/  — React 18 + TypeScript + Vite
+kavach-backend/   -- Spring Boot 4.x, Java 25
+kavach-frontend/  -- React 19 + TypeScript + Vite
 ```
 
 The React build output is copied into `kavach-backend/src/main/resources/static/` so both run on the same origin (no CORS in production).
@@ -186,15 +200,16 @@ SMTP credentials and port config live in `app_config` (encrypted with master key
 
 ## Security Constraints
 
-- OWASP Dependency-Check runs in the Maven build; fails on CVSS ≥ 7.
+- OWASP Dependency-Check is NOT yet in the Maven build (no pom contains it). Planned as a follow-up, gated to fail on CVSS >= 7.
 - Secrets (`byte[]`/`char[]`) must be zeroed after use — verify `SessionKeyStore.clear()` is called on every exit path (logout, lock, shutdown hook).
 - TOTP validation uses the samstevens library via `TotpService.isValidCode()` — never compare TOTP codes with `String.equals()`.
 - DEK re-encryption on master password change must be a single `@Transactional` method covering all credentials.
 - Security headers set by `SecurityHeadersFilter`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `CSP: default-src 'self'`.
 - Dependabot owns dependency versions declared in a manifest. It does NOT own Spring Boot
-  BOM property overrides in the root `pom.xml` - those are maintained by hand. The
-  `commons-lang3.version` pin is one; read the comment above it before touching it, and
-  re-check every such override when upgrading Spring Boot.
+  BOM property overrides in the root `pom.xml` - those are maintained by hand. Read the
+  comment above any such override before touching it, and re-check every one when upgrading
+  Spring Boot. (The old `commons-lang3` pin was removed because the Boot 4.1.3 BOM manages
+  3.20.0.)
 
 ## Testing Rule
 
