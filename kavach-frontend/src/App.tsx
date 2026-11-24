@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { RefreshCw, ServerOff } from 'lucide-react'
+import { Button } from './components/ui/Button'
 import { getVaultStatus } from './api/auth'
 import { useKavachStore } from './store/useKavachStore'
 import { Layout } from './components/Layout'
@@ -14,6 +16,25 @@ import { EditNote } from './screens/EditNote'
 import { AuditLog } from './screens/AuditLog'
 import { Settings } from './screens/Settings'
 import { HealthReport } from './screens/HealthReport'
+
+function BackendUnreachable({ retrying, onRetry }: { retrying: boolean; onRetry: () => void }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+      <div role="alert" className="w-full max-w-sm space-y-4 text-center">
+        <ServerOff className="mx-auto h-10 w-10 text-zinc-500" aria-hidden="true" />
+        <h1 className="text-lg font-semibold text-zinc-100">Can't reach Kavach</h1>
+        <p className="text-sm text-zinc-400">
+          The Kavach service isn't responding. If you started Kavach.exe, check its console
+          window for errors, or restart it.
+        </p>
+        <Button onClick={onRetry} loading={retrying}>
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Retry
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 function PrivateRoutes() {
   return (
@@ -36,7 +57,7 @@ function PrivateRoutes() {
 export function App() {
   const { status, setStatus } = useKavachStore()
 
-  const { data } = useQuery({
+  const { data, isError, isFetching, refetch } = useQuery({
     queryKey: ['vault-status'],
     queryFn: getVaultStatus,
     retry: false,
@@ -47,6 +68,12 @@ export function App() {
     if (status !== 'loading') return   // only auto-transition on initial load
     setStatus(data.initialized ? 'locked' : 'setup')
   }, [data, status, setStatus])
+
+  // Without this, a failed status check left the spinner below up forever:
+  // nothing else ever moves `status` off 'loading' when the backend is down.
+  if (status === 'loading' && isError) {
+    return <BackendUnreachable retrying={isFetching} onRetry={() => refetch()} />
+  }
 
   if (status === 'loading') {
     return (
