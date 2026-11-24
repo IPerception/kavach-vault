@@ -238,10 +238,11 @@
             Usage (run from project root so the frontend is built first):
               mvn clean install -P native-installer
 
-            Output: kavach-backend/target/installer/
-              Windows  : Kavach-1.1.0.exe  (requires WiX 3.x for .msi; app-image is default)
-              macOS    : Kavach-1.1.0.dmg
-              Linux    : kavach_1.1.0_amd64.deb
+            Output: kavach-backend/target/installer/ (installer formats), and the
+            app-image at dist/Kavach/ (Kavach.exe on Windows).
+              Windows  : Kavach-<version>.exe  (requires WiX 3.x for .msi; app-image is default)
+              macOS    : Kavach-<version>.dmg
+              Linux    : kavach_<version>_amd64.deb
 
             To produce a specific format add: -Djpackage.type=msi|dmg|deb|rpm|exe|pkg|app-image
             The default is the platform-native format; app-image works on all platforms

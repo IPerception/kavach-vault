@@ -1,5 +1,7 @@
 # Kavach -- Implementation Plan
 
+> **Historical document.** This is the original build plan, last updated at v1.1.0. The current stack, release history and roadmap are in `CLAUDE.md`; the libraries are described in `docs/LIBRARIES.md`.
+
 > **Kavach** (kavach) -- Sanskrit for *shield* or *armour*. Your credentials, protected.
 
 ## Current Status

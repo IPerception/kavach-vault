@@ -10,7 +10,7 @@
 graph TB
     subgraph Browser["Browser (localhost:8080)"]
         direction TB
-        React["React 18 + TypeScript"]
+        React["React 19 + TypeScript"]
         Zustand["Zustand\nAuth / Lock State"]
         RQ["TanStack Query\nServer State & Caching"]
         RHF["React Hook Form + Zod\nInput Validation"]

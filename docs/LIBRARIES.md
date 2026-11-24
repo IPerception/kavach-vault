@@ -2,17 +2,17 @@
 
 ## Runtime Dependencies
 
-### React 18 (`react`, `react-dom`)
+### React 19 (`react`, `react-dom`)
 **Purpose:** UI rendering framework.
 
-React is the baseline choice here. The alternatives -- Vue, Svelte, Angular -- are all capable, but React's ecosystem depth (TanStack Query, Radix UI, React Hook Form all have first-class React support) meant we'd be fighting the grain with any other framework. React 18's concurrent features also give us `useTransition` if we need it later.
+React is the baseline choice here. The alternatives -- Vue, Svelte, Angular -- are all capable, but React's ecosystem depth (TanStack Query, Radix UI, React Hook Form all have first-class React support) meant we'd be fighting the grain with any other framework. React's concurrent features (since 18) also give us `useTransition` if we need it later.
 
 ---
 
-### React Router DOM v6 (`react-router-dom`)
+### React Router DOM v7 (`react-router-dom`)
 **Purpose:** Client-side routing between screens (Dashboard, Add, Edit, Audit, Settings).
 
-v6 is the current stable release. The alternative is TanStack Router, which has better type safety, but it's newer and less battle-tested. Since our routing is simple (8 routes, no nested data loading), React Router v6 is sufficient. We deliberately avoided file-based routing frameworks (Next.js, Remix) because Kavach is a local desktop app served as static files from a Spring Boot jar -- server-side rendering and a Node.js server are not available or desirable.
+v7 is the current stable release (used in library mode, not its framework mode). The alternative is TanStack Router, which has better type safety, but it's newer and less battle-tested. Since our routing is simple (8 routes, no nested data loading), React Router is sufficient. We deliberately avoided file-based routing frameworks (Next.js, Remix) because Kavach is a local desktop app served as static files from a Spring Boot jar -- server-side rendering and a Node.js server are not available or desirable.
 
 ---
 
