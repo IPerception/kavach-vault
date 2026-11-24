@@ -1,6 +1,7 @@
 package com.kavach.credential;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.kavach.crypto.EncryptionService;
 import com.kavach.crypto.SessionKeyStore;
 import com.kavach.domain.AuditAction;
@@ -58,7 +59,7 @@ class CredentialServiceTest {
     void setUp() {
         credentialService = new CredentialService(
                 credentialRepository, userRepository, encryptionService,
-                sessionKeyStore, credentialMapper, eventPublisher, new ObjectMapper(), hibpService);
+                sessionKeyStore, credentialMapper, eventPublisher, JsonMapper.builder().build(), hibpService);
         testUser = VaultUser.builder()
                 .id(1L).username("alice").email("alice@example.com")
                 .masterPasswordHash("$2a$hashed").pbkdf2Salt(new byte[16])

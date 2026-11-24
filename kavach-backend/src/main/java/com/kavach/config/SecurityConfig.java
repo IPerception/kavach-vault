@@ -1,6 +1,6 @@
 package com.kavach.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.kavach.auth.JwtAuthFilter;
 import com.kavach.auth.JwtService;
 import com.kavach.auth.RateLimitFilter;
