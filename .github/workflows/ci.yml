@@ -1,0 +1,64 @@
+# Build and test every pull request and every push to main.
+#
+# Runs the same command a release build starts from: `mvn verify` from the
+# root, which builds the frontend through frontend-maven-plugin (pinned Node
+# and npm, `npm ci`, vitest, vite build) and then the backend with all of its
+# tests. That is deliberate. Several breakages on 2026-11-23 only showed up in
+# the Maven path, not in a local `npm run build`: a lockfile written by a
+# different npm, and Dependabot PRs merged with untested majors.
+#
+# Linux runner: the tests are platform independent and Linux is fastest.
+# Packaging the Windows app-image is the release workflow's job, not this one.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Major line only: always resolves to the newest Temurin 25 patch.
+      # The Maven cache also keeps frontend-maven-plugin's Node download.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Cache npm downloads
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('kavach-frontend/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+
+      - name: Build and run all tests
+        run: mvn -B -ntp clean verify
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            kavach-backend/target/surefire-reports/
+            kavach-frontend/coverage/
+          if-no-files-found: ignore
+          retention-days: 7
