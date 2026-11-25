@@ -46,8 +46,9 @@ function renderLayout(path = '/dashboard') {
             <Route path="dashboard" element={<p>dashboard screen</p>} />
             <Route path="health" element={<p>health screen</p>} />
             <Route path="audit" element={<p>audit screen</p>} />
-            <Route path="settings" element={<p>settings screen</p>} />
+            <Route path="settings" element={<input aria-label="a settings field" />} />
           </Route>
+          <Route path="add" element={<p>add screen</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -138,6 +139,34 @@ describe('Layout', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Switch to dark mode' }))
     expect(useKavachStore.getState().colorMode).toBe('dark')
+  })
+
+  it('the sidebar New item button opens /add', async () => {
+    renderLayout()
+    await userEvent.click(screen.getByRole('button', { name: 'New item' }))
+    expect(await screen.findByText('add screen')).toBeInTheDocument()
+  })
+
+  it('N opens /add from any screen', async () => {
+    renderLayout('/audit')
+    await userEvent.keyboard('n')
+    expect(await screen.findByText('add screen')).toBeInTheDocument()
+  })
+
+  it('N typed in a field does not open New item', async () => {
+    renderLayout('/settings')
+    await userEvent.type(screen.getByRole('textbox', { name: 'a settings field' }), 'n')
+    expect(screen.queryByText('add screen')).not.toBeInTheDocument()
+  })
+
+  it('N does nothing while a dialog is open', async () => {
+    renderLayout('/audit')
+    const open = document.createElement('div')
+    open.setAttribute('role', 'dialog')
+    document.body.appendChild(open)
+    await userEvent.keyboard('n')
+    expect(screen.queryByText('add screen')).not.toBeInTheDocument()
+    open.remove()
   })
 
   it('shows the status bar with the real origin and version', async () => {

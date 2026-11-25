@@ -251,24 +251,7 @@ describe('Dashboard', () => {
     expect(box).toHaveFocus()
   })
 
-  it('N navigates to /add', async () => {
-    renderDashboard()
-    await screen.findByRole('searchbox', { name: 'Search vault' })
-    fireEvent.keyDown(window, { key: 'n' })
-    expect(await screen.findByText('add screen')).toBeInTheDocument()
-  })
-
-  it('N typed in the search box does not navigate', async () => {
-    renderDashboard()
-    await userEvent.type(await screen.findByRole('searchbox', { name: 'Search vault' }), 'n')
-    expect(screen.queryByText('add screen')).not.toBeInTheDocument()
-  })
-
-  it('the New item button goes to /add', async () => {
-    renderDashboard()
-    await userEvent.click(await screen.findByRole('button', { name: 'New item' }))
-    expect(await screen.findByText('add screen')).toBeInTheDocument()
-  })
+  // The New item button and the N shortcut live in the sidebar now: see Layout.test.
 
   it('Escape clears the search', async () => {
     renderDashboard()

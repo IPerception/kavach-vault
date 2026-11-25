@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { createCredential } from '../api/credentials'
-import { Card } from '../components/ui/Card'
+import { ItemDialog, ItemDialogFooter, useItemDialogClose } from '../components/ItemDialog'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
@@ -25,7 +24,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export function AddCredential() {
-  const navigate = useNavigate()
+  const close = useItemDialogClose()
   const qc = useQueryClient()
   const [tags, setTags] = useState<string[]>([])
 
@@ -51,19 +50,13 @@ export function AddCredential() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['credentials'] })
-      navigate('/dashboard')
+      close()
     },
   })
 
   return (
-    <div className="space-y-6">
-      <div className="rule-gold mx-auto flex max-w-lg items-center justify-between gap-4">
-        <h1 className="font-display text-xl font-semibold text-text">New item</h1>
-        <ItemTypeSwitch current="password" />
-      </div>
-      <Card className="mx-auto max-w-lg">
-
-      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
+    <ItemDialog title="New item" actions={<ItemTypeSwitch current="password" />}>
+      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-3">
         <Input
           id="purpose"
           label="Purpose"
@@ -98,7 +91,7 @@ export function AddCredential() {
           error={errors.url?.message}
           {...register('url')}
         />
-        <Textarea id="notes" label="Notes (optional)" rows={3} {...register('notes')} />
+        <Textarea id="notes" label="Notes (optional)" rows={2} {...register('notes')} />
         <TagInput value={tags} onChange={setTags} />
         {mutation.isError && (
           <p className="text-xs text-weak-text">
@@ -106,16 +99,15 @@ export function AddCredential() {
               'Failed to save credential.'}
           </p>
         )}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
+        <ItemDialogFooter>
+          <Button type="button" variant="secondary" onClick={close}>
             Cancel
           </Button>
           <Button type="submit" loading={mutation.isPending}>
             Save
           </Button>
-        </div>
+        </ItemDialogFooter>
       </form>
-    </Card>
-    </div>
+    </ItemDialog>
   )
 }

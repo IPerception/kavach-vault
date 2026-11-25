@@ -40,7 +40,7 @@ function renderAt(path: string, items: CredentialSummary[]) {
   return invalidate
 }
 
-describe('Delete on the Edit screens', () => {
+describe('Delete in the Edit dialogs', () => {
   beforeEach(() => {
     vi.mocked(deleteCredential).mockReset()
     vi.mocked(deleteCredential).mockResolvedValue({} as never)
@@ -64,7 +64,11 @@ describe('Delete on the Edit screens', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
     const dialog = await screen.findByRole('dialog', { name: 'Delete credential?' })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Delete credential?' })).not.toBeInTheDocument(),
+    )
+    // The Edit dialog itself stays open.
+    expect(screen.getByRole('dialog', { name: 'Edit item' })).toBeInTheDocument()
     expect(deleteCredential).not.toHaveBeenCalled()
     expect(screen.queryByText('Dashboard page')).not.toBeInTheDocument()
   })

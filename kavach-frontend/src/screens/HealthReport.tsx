@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { ShieldCheck, ShieldAlert, Copy, Clock, Pencil, Flame, Wifi } from 'lucide-react'
 import { checkBreaches } from '../api/credentials'
@@ -12,6 +12,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, Dia
 import { cn } from '../components/ui/cn'
 import type { BreachResult, CredentialHealth } from '../api/types'
 import { getExpiryDays } from '../hooks/useExpiryCheck'
+import { itemLinkState } from '../lib/itemRoutes'
 
 const STALE_DAYS = getExpiryDays()
 
@@ -193,6 +194,7 @@ function Stat({
 }
 
 function CredentialRow({ item, breach }: { item: CredentialHealth; breach?: BreachResult }) {
+  const location = useLocation()
   const tags = issueTags(item)
   return (
     <li className="flex items-center justify-between px-1 py-3">
@@ -215,6 +217,7 @@ function CredentialRow({ item, breach }: { item: CredentialHealth; breach?: Brea
       </div>
       <Link
         to={`/edit/${item.id}`}
+        state={itemLinkState(location)}
         aria-label={`Edit ${item.purpose}`}
         className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-control text-soft transition-colors hover:bg-row-hover hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >

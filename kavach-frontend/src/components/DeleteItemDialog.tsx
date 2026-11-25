@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useItemDialogClose } from './ItemDialog'
 import { Trash2 } from 'lucide-react'
 import { deleteCredential } from '../api/credentials'
 import { Button } from './ui/Button'
@@ -12,10 +12,10 @@ interface DeleteItemDialogProps {
   kind: 'credential' | 'note'
 }
 
-/** Danger action for the Edit screens: confirm, delete, refresh the vault queries, go to the dashboard. */
+/** Danger action in the Edit dialogs: confirm, delete, refresh the vault queries, close back to the screen underneath. */
 export function DeleteItemDialog({ id, name, kind }: DeleteItemDialogProps) {
   const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
+  const closeItem = useItemDialogClose()
   const qc = useQueryClient()
 
   const mutation = useMutation({
@@ -23,7 +23,8 @@ export function DeleteItemDialog({ id, name, kind }: DeleteItemDialogProps) {
     onSuccess: () => {
       // ['credentials'] also covers ['credentials', 'health'].
       qc.invalidateQueries({ queryKey: ['credentials'] })
-      navigate('/dashboard')
+      setOpen(false)
+      closeItem()
     },
   })
 

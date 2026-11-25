@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { createNote } from '../api/credentials'
-import { Card } from '../components/ui/Card'
+import { ItemDialog, ItemDialogFooter, useItemDialogClose } from '../components/ItemDialog'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
@@ -20,7 +19,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export function AddNote() {
-  const navigate = useNavigate()
+  const close = useItemDialogClose()
   const qc = useQueryClient()
   const [tags, setTags] = useState<string[]>([])
 
@@ -39,19 +38,13 @@ export function AddNote() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['credentials'] })
-      navigate('/dashboard')
+      close()
     },
   })
 
   return (
-    <div className="space-y-6">
-      <div className="rule-gold mx-auto flex max-w-lg items-center justify-between gap-4">
-        <h1 className="font-display text-xl font-semibold text-text">New item</h1>
-        <ItemTypeSwitch current="note" />
-      </div>
-      <Card className="mx-auto max-w-lg">
-
-      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
+    <ItemDialog title="New item" actions={<ItemTypeSwitch current="note" />}>
+      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-3">
         <Input
           id="title"
           label="Title"
@@ -74,16 +67,15 @@ export function AddNote() {
               'Failed to save note.'}
           </p>
         )}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
+        <ItemDialogFooter>
+          <Button type="button" variant="secondary" onClick={close}>
             Cancel
           </Button>
           <Button type="submit" loading={mutation.isPending}>
             Save
           </Button>
-        </div>
+        </ItemDialogFooter>
       </form>
-    </Card>
-    </div>
+    </ItemDialog>
   )
 }

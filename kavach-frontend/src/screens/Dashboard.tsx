@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, Copy, Eye, Globe, ShieldOff, Star, X } from 'lucide-react'
 import { toggleFavourite } from '../api/credentials'
@@ -18,6 +18,7 @@ import { useVaultAttention } from '../hooks/useVaultAttention'
 import { isStale, passwordAgeDate, strengthBucket, type StrengthBucket } from '../lib/attention'
 import { formatRelative } from '../lib/date'
 import { hostOf, safeHref } from '../lib/url'
+import { itemLinkState } from '../lib/itemRoutes'
 
 const PAGE_SIZE = 25
 const VISIBLE_TAGS = 2
@@ -128,6 +129,7 @@ function VaultRow({ cred, strength, expiryDays, onToggleFavourite }: VaultRowPro
   const href = isNote ? undefined : safeHref(cred.url)
   const tags = cred.tags ?? []
   const hiddenTags = tags.slice(VISIBLE_TAGS)
+  const location = useLocation()
 
   // A password's age is when the password changed; a note has no password, so it shows
   // when it was last edited and never reads as stale.
@@ -151,6 +153,7 @@ function VaultRow({ cred, strength, expiryDays, onToggleFavourite }: VaultRowPro
         <span className="flex items-center gap-2 text-base font-medium">
           <Link
             to={editPath}
+            state={itemLinkState(location)}
             className="min-w-0 truncate rounded-sm text-text hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             {cred.purpose}
@@ -224,6 +227,7 @@ export function Dashboard() {
   const [importOpen, setImportOpen] = useState(false)
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const location = useLocation()
   const searchRef = useRef<HTMLInputElement>(null)
 
   // The tag can also change from outside (sidebar links): start that list on page 1.
@@ -233,14 +237,8 @@ export function Dashboard() {
     setPage(0)
   }
 
+  // N (New item) is handled in Layout so it works on every screen.
   useEffect(() => {
-    function isTyping() {
-      const el = document.activeElement as HTMLElement | null
-      if (!el) return false
-      const tag = el.tagName.toLowerCase()
-      return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
-    }
-
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault()
@@ -254,15 +252,11 @@ export function Dashboard() {
         searchRef.current?.blur()
         return
       }
-      if (e.key === 'n' && !isTyping()) {
-        e.preventDefault()
-        navigate('/add')
-      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [navigate])
+  }, [])
 
   // Health is optional: while it loads or if it fails, healthById is undefined and the rows
   // simply have no strength chip. The same summary feeds the sidebar Health count.
@@ -333,9 +327,6 @@ export function Dashboard() {
         <CredentialSearch ref={searchRef} value={search} onChange={(v) => { setSearch(v); setPage(0) }} />
         <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
           Import CSV
-        </Button>
-        <Button size="sm" kbd="N" aria-label="New item" aria-keyshortcuts="N" onClick={() => navigate('/add')}>
-          New item
         </Button>
       </div>
 
@@ -409,7 +400,7 @@ export function Dashboard() {
             <ShieldOff className="mb-2 h-7 w-7 text-muted" aria-hidden="true" />
             <p className="text-base font-semibold text-text">Your vault is empty</p>
             <p className="text-sm text-muted">Add your first item to get started.</p>
-            <Button className="mt-4" onClick={() => navigate('/add')}>
+            <Button className="mt-4" onClick={() => navigate('/add', { state: itemLinkState(location) })}>
               Add your first item
             </Button>
           </div>

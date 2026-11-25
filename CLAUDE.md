@@ -297,15 +297,20 @@ PR 9 (Dashboard rewrite, OtpModal on Dialog, lib/date.ts, lib/url.ts safeHref, H
 count muted at 0, vault row borders, clipboard clear fix) merged as #51. The clipboard
 clear had never worked: Firefox refuses clipboard writes outside a user gesture and
 Chromium refuses them without focus, so `useClipboard` retries on the next click/key/focus.
-Visual polish PR (branch `redesign/visual-polish`, OPEN): sidebar Wordmark with the
+Visual polish merged as #52: sidebar Wordmark with the
 tagline "Personal Password Manager" (real text, centred name), Chip tones `site` (navy) /
 `tag` (gold tint) with red/amber/green reserved for strength, `rule-gold` / `gold-line`
 utilities (dark-gold-dark) under page headers and at sidebar group breaks only, warm
 ivory dark-mode text ramp. Tried and deferred by the owner: the gold banner image in the
 sidebar corner (trial image + compose.py in docs/notes/brand-preview/; source is the
 untracked `Kavach Gold Shield Cybersecurity Banner.png` in the repo root).
-Next: (1) PR -- New item AND Edit as dialogs over the vault instead of full screens
-(approved). (2) PR 11 -- lock screen with the gold banner as hero (approved; move the
+Item dialogs PR (branch `redesign/item-dialogs`, OPEN): New item / Edit / Edit note are
+route-backed dialogs (`lib/itemRoutes.ts`, `components/ItemDialog.tsx`): the URL stays
+/add, /edit/:id..., the link passes `state.background` and App renders the screens at that
+background, so the opening screen (Vault or Health) stays live underneath and refreshes
+after a save; Back/Escape/X/outside click close; direct load shows it over the dashboard.
+"+ New item" is a sidebar button (action, not a nav row), N works on every screen.
+Next: PR 11 -- lock screen with the gold banner as hero (approved; move the
 banner source into scripts/icons and generate the webp via generate.mjs), setup wizard,
 remove `kavach-*` ramp and public/Kavach-Logo.png, docs incl. OFL font notice. Dev: open http://localhost:5173
 (typed in full -- Firefox autocompletes https and fails with SSL_ERROR_RX_RECORD_TOO_LONG);
