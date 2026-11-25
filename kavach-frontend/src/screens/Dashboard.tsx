@@ -167,23 +167,23 @@ function VaultRow({ cred, strength, expiryDays, onToggleFavourite }: VaultRowPro
       <div className="flex flex-[0_1_auto] flex-wrap gap-1.5">
         {host &&
           (href ? (
-            <Chip as="a" href={href} target="_blank" rel="noopener noreferrer">
+            <Chip as="a" tone="site" href={href} target="_blank" rel="noopener noreferrer">
               <Globe size={11} aria-hidden="true" />
               {host}
             </Chip>
           ) : (
-            <Chip>
+            <Chip tone="site">
               <Globe size={11} aria-hidden="true" />
               {host}
             </Chip>
           ))}
         {!isNote && strength && <Chip tone={STRENGTH_TONE[strength]}>{STRENGTH_LABEL[strength]}</Chip>}
         {tags.slice(0, VISIBLE_TAGS).map((tag) => (
-          <Chip key={tag}>#{tag}</Chip>
+          <Chip key={tag} tone="tag">#{tag}</Chip>
         ))}
         {hiddenTags.length > 0 && (
           <Tooltip label={hiddenTags.map((t) => `#${t}`).join(', ')}>
-            <Chip tabIndex={0}>
+            <Chip tone="tag" tabIndex={0}>
               +{hiddenTags.length}
               <span className="sr-only"> more tags: {hiddenTags.map((t) => `#${t}`).join(', ')}</span>
             </Chip>
@@ -323,7 +323,7 @@ export function Dashboard() {
 
   return (
     <div className="flex grow flex-col gap-3.5">
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="rule-gold flex flex-wrap items-center gap-2.5">
         <div className="flex-[1_1_220px]">
           <h1 className="text-xl font-semibold tracking-tight text-text">
             {getGreeting()}, {username}

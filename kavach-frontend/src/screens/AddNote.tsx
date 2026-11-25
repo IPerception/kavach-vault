@@ -45,7 +45,7 @@ export function AddNote() {
 
   return (
     <div className="space-y-6">
-      <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
+      <div className="rule-gold mx-auto flex max-w-lg items-center justify-between gap-4">
         <h1 className="font-display text-xl font-semibold text-text">New item</h1>
         <ItemTypeSwitch current="note" />
       </div>

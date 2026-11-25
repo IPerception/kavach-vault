@@ -468,7 +468,7 @@ export function Settings() {
 
   return (
     <>
-      <h1 className="mb-6 font-display text-xl font-semibold text-text">Settings</h1>
+      <h1 className="rule-gold mb-6 font-display text-xl font-semibold text-text">Settings</h1>
 
       {/* Settings list */}
       <Card className="max-w-lg p-0!">

@@ -294,19 +294,20 @@ src/components/ui), PR 6 (#46 sidebar shell, status bar, lib/attention.ts), PR 7
 forms with Delete on Edit, Audit log, Health), PR 8 (#50 Settings on ui/Dialog,
 ImportDialog). Also merged: #47 passwordChangedAt, #49 CSP style nonce.
 PR 9 (Dashboard rewrite, OtpModal on Dialog, lib/date.ts, lib/url.ts safeHref, Health
-count muted at 0, vault row borders, clipboard clear fix) is OPEN from branch
-`redesign/dashboard`, tested by the owner incl. a real TOTP reveal. The clipboard clear
-had never worked: Firefox refuses clipboard writes outside a user gesture and Chromium
-refuses them without focus, so `useClipboard` now retries on the next click/key/focus.
-Owner feedback 2026-11-25, proposed by Claude but NOT yet approved by the owner:
-(a) visual PR -- sidebar brand = SVG mark + "Kavach" (Fraunces) + small tagline as real
-text (owner may supply wording; no raster logo), chip tones by type (website navy, tags
-gold tint, red/amber/green reserved for strength), dark-gold-dark gradient rule under
-page/section titles and only at sidebar group breaks (not under every item), warmer
-ivory dark-mode text ramp (contrast-checked; body text not gold);
-(b) separate PR -- New item AND Edit as dialogs over the vault instead of full screens.
-Then PR 11 (lock screen, setup wizard, remove `kavach-*` ramp and
-public/Kavach-Logo.png, docs incl. OFL font notice). Dev: open http://localhost:5173
+count muted at 0, vault row borders, clipboard clear fix) merged as #51. The clipboard
+clear had never worked: Firefox refuses clipboard writes outside a user gesture and
+Chromium refuses them without focus, so `useClipboard` retries on the next click/key/focus.
+Visual polish PR (branch `redesign/visual-polish`, OPEN): sidebar Wordmark with the
+tagline "Personal Password Manager" (real text, centred name), Chip tones `site` (navy) /
+`tag` (gold tint) with red/amber/green reserved for strength, `rule-gold` / `gold-line`
+utilities (dark-gold-dark) under page headers and at sidebar group breaks only, warm
+ivory dark-mode text ramp. Tried and deferred by the owner: the gold banner image in the
+sidebar corner (trial image + compose.py in docs/notes/brand-preview/; source is the
+untracked `Kavach Gold Shield Cybersecurity Banner.png` in the repo root).
+Next: (1) PR -- New item AND Edit as dialogs over the vault instead of full screens
+(approved). (2) PR 11 -- lock screen with the gold banner as hero (approved; move the
+banner source into scripts/icons and generate the webp via generate.mjs), setup wizard,
+remove `kavach-*` ramp and public/Kavach-Logo.png, docs incl. OFL font notice. Dev: open http://localhost:5173
 (typed in full -- Firefox autocompletes https and fails with SSL_ERROR_RX_RECORD_TOO_LONG);
 port 8080 serves the last Maven-packaged frontend, not live code.
 Read the plan's ADDENDUM 2 for deviations from the

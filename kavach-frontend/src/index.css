@@ -55,9 +55,11 @@
   --k-input: #0B0E13;
   --k-border: #1F2630;
   --k-line: #161B23;
-  --k-text: #E6E8EB;
-  --k-soft: #C3C9D2;
-  --k-muted: #9AA3B0;
+  /* Warm ivory text ramp to sit with the gold (was cool grey #E6E8EB / #C3C9D2 / #9AA3B0).
+     Contrast on bg / panel / raised / chip: text 15.5-12.4, soft 11.8-9.4, muted 7.4-5.9. */
+  --k-text: #ECE6D8;
+  --k-soft: #D2C9B6;
+  --k-muted: #A89F8C;
   --k-nav-active: #1A202A;
   --k-chip: #1D2532;
   --k-chip-border: #2C3746;
@@ -170,6 +172,29 @@
   0%   { transform: scale(0.5); opacity: 0; }
   65%  { transform: scale(1.25); }
   100% { transform: scale(1);   opacity: 1; }
+}
+
+/* Dark - gold - dark separator, echoing the logo's gold rules. The ends fade to
+   transparent, so they melt into whatever background (dark or light) is behind.
+   gold-line: a decorative 1 px line element.
+   rule-gold: a line under a block (page title rows), without extra markup. */
+@utility gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--k-accent) 50%, transparent);
+}
+
+@utility rule-gold {
+  position: relative;
+  padding-bottom: 0.75rem;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--k-accent) 50%, transparent);
+  }
 }
 
 .animate-pop-in {

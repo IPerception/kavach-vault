@@ -86,7 +86,7 @@ export function EditCredential() {
 
   return (
     <div className="space-y-6">
-      <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
+      <div className="rule-gold mx-auto flex max-w-lg items-center justify-between gap-4">
         <h1 className="font-display text-xl font-semibold text-text">Edit item</h1>
         <DeleteItemDialog id={credential.id} name={credential.purpose} kind="credential" />
       </div>
