@@ -57,7 +57,7 @@ export function HealthReport() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="rule-gold flex items-center justify-between gap-4">
         <h1 className="font-display text-xl font-semibold text-text">Password health</h1>
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogTrigger asChild>

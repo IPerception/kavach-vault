@@ -74,8 +74,10 @@ export function Layout() {
             to="/dashboard"
             className="rounded-control px-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Wordmark size={32} className="[&>span:last-child]:text-lg" />
+            <Wordmark size={32} className="gap-2" nameClassName="text-lg" tagline="Personal Password Manager" />
           </Link>
+          {/* Gold rules only at group breaks (brand | nav | tags), not under every item. */}
+          <div aria-hidden="true" className="gold-line -my-1.5" />
 
           <div className="flex flex-col gap-0.5">
             <NavItem to="/dashboard" icon={<Home className={iconClass} aria-hidden="true" />} label="Vault" count={credentials.length} />
@@ -89,6 +91,8 @@ export function Layout() {
             <NavItem to="/audit" icon={<ListChecks className={iconClass} aria-hidden="true" />} label="Audit log" />
             <NavItem to="/settings" icon={<Settings className={iconClass} aria-hidden="true" />} label="Settings" />
           </div>
+
+          {tags.length > 0 && <div aria-hidden="true" className="gold-line -my-1.5" />}
 
           {tags.length > 0 && (
             <div className="flex flex-col gap-px">

@@ -28,7 +28,7 @@ export function AuditLog() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-xl font-semibold text-text">Audit log</h1>
+      <h1 className="rule-gold font-display text-xl font-semibold text-text">Audit log</h1>
 
       <Card className="p-0">
         {entries.length === 0 && (

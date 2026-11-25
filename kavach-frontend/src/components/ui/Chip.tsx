@@ -1,19 +1,24 @@
 import { type AnchorHTMLAttributes, type HTMLAttributes } from 'react'
 import { cn } from './cn'
 
-type Tone = 'neutral' | 'ok' | 'fair' | 'weak'
+// Colour says what kind of chip it is. Red/amber/green are reserved for strength and
+// issues (with a dot), so they keep meaning "weak / fair / strong"; a website is navy (the
+// logo's secondary) and a tag is a gold tint.
+type Tone = 'neutral' | 'site' | 'tag' | 'ok' | 'fair' | 'weak'
 
-const dotClasses: Record<Exclude<Tone, 'neutral'>, string> = {
+const dotClasses: Partial<Record<Tone, string>> = {
   ok: 'bg-ok-bar',
   fair: 'bg-fair-bar',
   weak: 'bg-weak-bar',
 }
 
-const textClasses: Record<Tone, string> = {
-  neutral: 'text-soft',
-  ok: 'text-ok-text',
-  fair: 'text-fair-text',
-  weak: 'text-weak-text',
+const toneClasses: Record<Tone, string> = {
+  neutral: 'border-chip-border bg-chip text-soft',
+  site: 'border-tile-fg/25 bg-tile text-tile-fg',
+  tag: 'border-accent-line/40 bg-accent/10 text-accent-text',
+  ok: 'border-ok-bar/35 bg-ok-bar/10 text-ok-text',
+  fair: 'border-fair-bar/35 bg-fair-bar/10 text-fair-text',
+  weak: 'border-weak-bar/35 bg-weak-bar/10 text-weak-text',
 }
 
 type ChipProps = { tone?: Tone } & (
@@ -23,15 +28,15 @@ type ChipProps = { tone?: Tone } & (
 
 export function Chip({ tone = 'neutral', className, children, ...props }: ChipProps) {
   const classes = cn(
-    'inline-flex h-6 items-center gap-1.5 rounded-full border border-chip-border bg-chip px-2.5 font-mono text-2xs',
-    textClasses[tone],
+    'inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 font-mono text-2xs',
+    toneClasses[tone],
     props.as === 'a' &&
       'transition-colors hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
     className,
   )
   const content = (
     <>
-      {tone === 'neutral' ? null : (
+      {dotClasses[tone] && (
         <span aria-hidden="true" className={cn('h-1.5 w-1.5 rounded-full', dotClasses[tone])} />
       )}
       {children}

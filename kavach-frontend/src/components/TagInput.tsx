@@ -38,7 +38,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
       <label htmlFor={inputId} className="text-sm font-medium text-soft">Tags (optional)</label>
       <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-control border border-border bg-input px-3 py-1.5 focus-within:ring-2 focus-within:ring-ring">
         {value.map((tag) => (
-          <Chip key={tag} className="pr-1">
+          <Chip key={tag} tone="tag" className="pr-1">
             #{tag}
             <IconButton
               label={`Remove tag ${tag}`}
