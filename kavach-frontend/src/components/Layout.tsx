@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Activity, Home, ListChecks, LockKeyhole, Moon, Settings, Sun } from 'lucide-react'
+import { useEffect, type ReactNode } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Activity, Home, ListChecks, LockKeyhole, Moon, Plus, Settings, Sun } from 'lucide-react'
 import { useKavachStore } from '../store/useKavachStore'
 import { useInactivityWatcher } from '../hooks/useInactivityWatcher'
 import { useVaultAttention } from '../hooks/useVaultAttention'
 import { tagCounts } from '../lib/attention'
+import { itemLinkState } from '../lib/itemRoutes'
 import { AutoLockTimer } from './AutoLockTimer'
 import { ExpiryBanner } from './ExpiryBanner'
 import { Button } from './ui/Button'
@@ -17,6 +18,13 @@ import { Wordmark } from './brand/Wordmark'
 function InactivityWatcher() {
   useInactivityWatcher()
   return null
+}
+
+function isTyping() {
+  const el = document.activeElement as HTMLElement | null
+  if (!el) return false
+  const tag = el.tagName.toLowerCase()
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
 }
 
 const navLinkClass = (active: boolean) =>
@@ -54,13 +62,32 @@ export function Layout() {
   const colorMode = useKavachStore((s) => s.colorMode)
   const setColorMode = useKavachStore((s) => s.setColorMode)
   const doLogout = useKavachStore((s) => s.doLogout)
-  const { pathname, search } = useLocation()
+  const location = useLocation()
+  const { pathname, search } = location
+  const navigate = useNavigate()
   const { credentials, summary } = useVaultAttention()
 
   const tags = tagCounts(credentials)
   const activeTag = pathname === '/dashboard' ? new URLSearchParams(search).get('tag') : null
   const nextMode = colorMode === 'dark' ? 'light' : 'dark'
   const iconClass = 'h-[15px] w-[15px] shrink-0'
+
+  // Layout renders at the background location, so `location` is always the screen the
+  // dialog will open over.
+  const openNewItem = () => navigate('/add', { state: itemLinkState(location) })
+
+  // N opens New item from any screen. Ignored while typing, with a modifier, or while any
+  // dialog (New item, Reveal, Settings...) is already open.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'n' || e.ctrlKey || e.metaKey || e.altKey || isTyping()) return
+      if (document.querySelector('[role="dialog"]')) return
+      e.preventDefault()
+      navigate('/add', { state: itemLinkState(location) })
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [navigate, location])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-text">
@@ -78,6 +105,12 @@ export function Layout() {
           </Link>
           {/* Gold rules only at group breaks (brand | nav | tags), not under every item. */}
           <div aria-hidden="true" className="gold-line -my-1.5" />
+
+          {/* An action, not a destination: a button, so it never becomes the active nav row. */}
+          <Button className="w-full" kbd="N" aria-label="New item" aria-keyshortcuts="N" onClick={openNewItem}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New item
+          </Button>
 
           <div className="flex flex-col gap-0.5">
             <NavItem to="/dashboard" icon={<Home className={iconClass} aria-hidden="true" />} label="Vault" count={credentials.length} />

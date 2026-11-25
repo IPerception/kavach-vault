@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw, ServerOff } from 'lucide-react'
 import { Button } from './components/ui/Button'
@@ -17,6 +17,7 @@ import { EditNote } from './screens/EditNote'
 import { AuditLog } from './screens/AuditLog'
 import { Settings } from './screens/Settings'
 import { HealthReport } from './screens/HealthReport'
+import { backgroundOf, isItemPath } from './lib/itemRoutes'
 
 function BackendUnreachable({ retrying, onRetry }: { retrying: boolean; onRetry: () => void }) {
   return (
@@ -38,21 +39,34 @@ function BackendUnreachable({ retrying, onRetry }: { retrying: boolean; onRetry:
   )
 }
 
-function PrivateRoutes() {
+// The screens render at the background location while an item dialog (New item / Edit) is
+// open, so the screen it was opened from stays visible and live underneath; on a direct
+// load of an item URL that background is the dashboard. See lib/itemRoutes.ts.
+export function PrivateRoutes() {
+  const location = useLocation()
+  const onItemPath = isItemPath(location.pathname)
+  const screenLocation = onItemPath ? (backgroundOf(location) ?? '/dashboard') : location
+
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="add" element={<AddCredential />} />
-        <Route path="edit/:id" element={<EditCredential />} />
-        <Route path="add-note" element={<AddNote />} />
-        <Route path="edit-note/:id" element={<EditNote />} />
-        <Route path="audit" element={<AuditLog />} />
-        <Route path="health" element={<HealthReport />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
-      </Route>
-    </Routes>
+    <>
+      <Routes location={screenLocation}>
+        <Route element={<Layout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="audit" element={<AuditLog />} />
+          <Route path="health" element={<HealthReport />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Route>
+      </Routes>
+      {onItemPath && (
+        <Routes>
+          <Route path="add" element={<AddCredential />} />
+          <Route path="add-note" element={<AddNote />} />
+          <Route path="edit/:id" element={<EditCredential />} />
+          <Route path="edit-note/:id" element={<EditNote />} />
+        </Routes>
+      )}
+    </>
   )
 }
 
