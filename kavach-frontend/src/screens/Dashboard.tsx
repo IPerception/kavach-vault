@@ -1,13 +1,38 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import * as Dialog from '@radix-ui/react-dialog'
-import { PlusCircle, Pencil, Trash2, ShieldCheck, KeyRound, Globe, ShieldOff, SearchX, ChevronLeft, ChevronRight, Tag, X, Star, StickyNote, NotebookPen } from 'lucide-react'
-import { listCredentials, deleteCredential, toggleFavourite } from '../api/credentials'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Check, Copy, Eye, Globe, ShieldOff, Star, X } from 'lucide-react'
+import { toggleFavourite } from '../api/credentials'
+import type { CredentialSummary } from '../api/types'
 import { CredentialSearch } from '../components/CredentialSearch'
+import { ImportDialog } from '../components/ImportDialog'
 import { OtpModal } from '../components/OtpModal'
 import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
+import { Chip } from '../components/ui/Chip'
+import { IconButton } from '../components/ui/IconButton'
+import { Pagination } from '../components/ui/Pagination'
+import { Tooltip } from '../components/ui/Tooltip'
+import { cn } from '../components/ui/cn'
+import { useClipboard } from '../hooks/useClipboard'
+import { useVaultAttention } from '../hooks/useVaultAttention'
+import { isStale, passwordAgeDate, strengthBucket, type StrengthBucket } from '../lib/attention'
+import { formatRelative } from '../lib/date'
+import { hostOf, safeHref } from '../lib/url'
+
+const PAGE_SIZE = 25
+const VISIBLE_TAGS = 2
+
+type Filter = 'all' | 'fav' | 'pw' | 'note'
+
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'fav', label: 'Favourites' },
+  { id: 'pw', label: 'Passwords' },
+  { id: 'note', label: 'Notes' },
+]
+
+const STRENGTH_LABEL: Record<StrengthBucket, string> = { weak: 'Weak', fair: 'Fair', strong: 'Strong' }
+const STRENGTH_TONE = { weak: 'weak', fair: 'fair', strong: 'ok' } as const
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -16,12 +41,175 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function CredentialAvatar({ purpose }: { purpose: string }) {
-  const letter = purpose.trim()[0]?.toUpperCase() ?? '?'
+const isNoteItem = (c: CredentialSummary) => c.credentialType === 'NOTE'
+
+function InitialTile({ name, className }: { name: string; className?: string }) {
   return (
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kavach-500/15 text-sm font-bold text-kavach-500">
-      {letter}
-    </div>
+    <span
+      aria-hidden="true"
+      className={cn(
+        'flex shrink-0 items-center justify-center bg-tile font-display font-semibold text-tile-fg',
+        className,
+      )}
+    >
+      {name.trim()[0]?.toUpperCase() ?? '?'}
+    </span>
+  )
+}
+
+function CopyUsernameButton({ name, username }: { name: string; username: string }) {
+  const { copy, copied } = useClipboard()
+  return (
+    <IconButton label={`Copy username for ${name}`} className="border-border bg-raised" onClick={() => copy(username)}>
+      {copied ? (
+        <Check size={14} className="text-ok-text" aria-hidden="true" />
+      ) : (
+        <Copy size={14} aria-hidden="true" />
+      )}
+    </IconButton>
+  )
+}
+
+const pillClass =
+  'inline-flex h-7 items-center gap-[7px] rounded-full border border-border bg-panel py-0 pl-1 pr-2.5 text-xs text-text ' +
+  'transition-colors hover:bg-row-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring ' +
+  'disabled:cursor-not-allowed disabled:opacity-50'
+
+function FavouritePill({ cred }: { cred: CredentialSummary }) {
+  const { copy, copied } = useClipboard()
+
+  const content = (
+    <>
+      <InitialTile name={cred.purpose} className="h-5 w-5 rounded-full text-[11px]" />
+      {cred.purpose}
+    </>
+  )
+
+  if (isNoteItem(cred)) {
+    return (
+      <OtpModal credentialId={cred.id} purpose={cred.purpose} credentialType="NOTE">
+        <button type="button" aria-label={`Reveal note ${cred.purpose} with authenticator code`} className={pillClass}>
+          {content}
+          <Eye size={12} className="text-muted" aria-hidden="true" />
+        </button>
+      </OtpModal>
+    )
+  }
+  return (
+    <button
+      type="button"
+      aria-label={`Copy username for ${cred.purpose}`}
+      disabled={!cred.username}
+      onClick={() => cred.username && copy(cred.username)}
+      className={pillClass}
+    >
+      {content}
+      {copied ? (
+        <Check size={12} className="text-ok-text" aria-hidden="true" />
+      ) : (
+        <Copy size={12} className="text-muted" aria-hidden="true" />
+      )}
+    </button>
+  )
+}
+
+interface VaultRowProps {
+  cred: CredentialSummary
+  strength: StrengthBucket | undefined
+  expiryDays: number
+  onToggleFavourite: (id: number) => void
+}
+
+function VaultRow({ cred, strength, expiryDays, onToggleFavourite }: VaultRowProps) {
+  const isNote = isNoteItem(cred)
+  const fav = Boolean(cred.favourite)
+  const editPath = isNote ? `/edit-note/${cred.id}` : `/edit/${cred.id}`
+  const host = isNote ? undefined : hostOf(cred.url)
+  const href = isNote ? undefined : safeHref(cred.url)
+  const tags = cred.tags ?? []
+  const hiddenTags = tags.slice(VISIBLE_TAGS)
+
+  // A password's age is when the password changed; a note has no password, so it shows
+  // when it was last edited and never reads as stale.
+  const dateIso = isNote ? cred.updatedAt : passwordAgeDate(cred)
+  const stale = !isNote && isStale(dateIso, expiryDays)
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border px-4 py-2.5 transition-colors hover:bg-row-hover">
+      <IconButton
+        label={fav ? `Remove ${cred.purpose} from favourites` : `Add ${cred.purpose} to favourites`}
+        aria-pressed={fav}
+        className={cn('-ml-1.5 h-[26px] w-[26px]', fav ? 'text-accent-text' : 'text-muted')}
+        onClick={() => onToggleFavourite(cred.id)}
+      >
+        <Star size={14} className={fav ? 'fill-current' : undefined} aria-hidden="true" />
+      </IconButton>
+
+      <InitialTile name={cred.purpose} className="h-[34px] w-[34px] rounded-panel text-[15px]" />
+
+      <div className="flex min-w-0 flex-[1_1_180px] flex-col">
+        <span className="flex items-center gap-2 text-base font-medium">
+          <Link
+            to={editPath}
+            className="min-w-0 truncate rounded-sm text-text hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {cred.purpose}
+          </Link>
+          {isNote && (
+            <span className="rounded-[3px] border border-border px-1.5 font-mono text-[10px] font-normal text-muted">
+              NOTE
+            </span>
+          )}
+        </span>
+        <span className="truncate text-xs text-muted">{isNote ? 'Secure note' : cred.username}</span>
+      </div>
+
+      <div className="flex flex-[0_1_auto] flex-wrap gap-1.5">
+        {host &&
+          (href ? (
+            <Chip as="a" href={href} target="_blank" rel="noopener noreferrer">
+              <Globe size={11} aria-hidden="true" />
+              {host}
+            </Chip>
+          ) : (
+            <Chip>
+              <Globe size={11} aria-hidden="true" />
+              {host}
+            </Chip>
+          ))}
+        {!isNote && strength && <Chip tone={STRENGTH_TONE[strength]}>{STRENGTH_LABEL[strength]}</Chip>}
+        {tags.slice(0, VISIBLE_TAGS).map((tag) => (
+          <Chip key={tag}>#{tag}</Chip>
+        ))}
+        {hiddenTags.length > 0 && (
+          <Tooltip label={hiddenTags.map((t) => `#${t}`).join(', ')}>
+            <Chip tabIndex={0}>
+              +{hiddenTags.length}
+              <span className="sr-only"> more tags: {hiddenTags.map((t) => `#${t}`).join(', ')}</span>
+            </Chip>
+          </Tooltip>
+        )}
+      </div>
+
+      <time dateTime={dateIso} className={cn('w-16 text-right text-xs', stale ? 'text-fair-text' : 'text-muted')}>
+        {formatRelative(dateIso)}
+      </time>
+
+      <div className="flex gap-1.5">
+        {!isNote && cred.username && <CopyUsernameButton name={cred.purpose} username={cred.username} />}
+        <OtpModal credentialId={cred.id} purpose={cred.purpose} credentialType={cred.credentialType}>
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label={`Reveal ${cred.purpose} with authenticator code`}
+            className="h-[30px] gap-1.5 border-accent-line px-2.5 text-xs font-semibold text-accent-text"
+          >
+            <Eye size={14} aria-hidden="true" />
+            Reveal
+          </Button>
+        </OtpModal>
+      </div>
+    </li>
   )
 }
 
@@ -31,13 +219,19 @@ export function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTag = searchParams.get('tag')
   const setActiveTag = (tag: string | null) => setSearchParams(tag === null ? {} : { tag })
-  const [showStarredOnly, setShowStarredOnly] = useState(false)
+  const [filter, setFilter] = useState<Filter>('all')
   const [page, setPage] = useState(0)
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; purpose: string } | null>(null)
-  const PAGE_SIZE = 25
+  const [importOpen, setImportOpen] = useState(false)
   const qc = useQueryClient()
   const navigate = useNavigate()
   const searchRef = useRef<HTMLInputElement>(null)
+
+  // The tag can also change from outside (sidebar links): start that list on page 1.
+  const [seenTag, setSeenTag] = useState(activeTag)
+  if (seenTag !== activeTag) {
+    setSeenTag(activeTag)
+    setPage(0)
+  }
 
   useEffect(() => {
     function isTyping() {
@@ -70,15 +264,9 @@ export function Dashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [navigate])
 
-  const { data: credentials = [], isLoading } = useQuery({
-    queryKey: ['credentials'],
-    queryFn: listCredentials,
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteCredential,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['credentials'] }),
-  })
+  // Health is optional: while it loads or if it fails, healthById is undefined and the rows
+  // simply have no strength chip. The same summary feeds the sidebar Health count.
+  const { credentials, isLoading, healthById, summary, expiryDays } = useVaultAttention()
 
   const favouriteMutation = useMutation({
     mutationFn: toggleFavourite,
@@ -86,319 +274,174 @@ export function Dashboard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['credentials'], exact: true }),
   })
 
-  const q = search.toLowerCase()
+  // A leading # narrows nothing by itself: "#work" and "work" both match the tag.
+  const q = search.trim().toLowerCase().replace(/^#/, '')
+  const matchesFilter = (c: CredentialSummary) =>
+    filter === 'all' || (filter === 'fav' && c.favourite) || (filter === 'pw' && !isNoteItem(c)) || (filter === 'note' && isNoteItem(c))
   const filtered = credentials
     .filter((c) => {
       const matchesSearch =
         c.purpose.toLowerCase().includes(q) ||
         (c.username ?? '').toLowerCase().includes(q) ||
-        (c.url ?? '').toLowerCase().includes(q)
+        (c.url ?? '').toLowerCase().includes(q) ||
+        (c.tags ?? []).some((t) => t.toLowerCase().includes(q))
       const matchesTag = activeTag === null || (c.tags ?? []).includes(activeTag)
-      const matchesStar = !showStarredOnly || c.favourite
-      return matchesSearch && matchesTag && matchesStar
+      return matchesSearch && matchesTag && matchesFilter(c)
     })
     .sort((a, b) => {
       if (a.favourite === b.favourite) return a.purpose.localeCompare(b.purpose)
       return (b.favourite ? 1 : 0) - (a.favourite ? 1 : 0)
     })
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+  // Clamp rather than trust the stored page: a filter that shrinks the list must not strand us.
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount - 1)
+  const paginated = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
 
   const username = localStorage.getItem('kavach_username') ?? 'there'
-  const withUrls = credentials.filter((c) => c.url).length
+  const today = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
 
-  const allTags = [...new Set(credentials.flatMap((c) => c.tags ?? []))].sort()
-  const anyStarred = credentials.some((c) => c.favourite)
-  const starredCount = filtered.filter((c) => c.favourite).length
-  const hasBothGroups = !showStarredOnly && starredCount > 0 && starredCount < filtered.length
-
-  if (isLoading) {
-    return <p className="text-sm text-zinc-400">Loading...</p>
+  const favourites = credentials.filter((c) => c.favourite).sort((a, b) => a.purpose.localeCompare(b.purpose))
+  const filterCounts: Record<Filter, number> = {
+    all: credentials.length,
+    fav: favourites.length,
+    pw: credentials.filter((c) => !isNoteItem(c)).length,
+    note: credentials.filter(isNoteItem).length,
   }
 
+  const { weak, stale, attention } = summary.counts
+  const attentionParts = [
+    weak > 0 ? `${weak} weak` : null,
+    stale > 0 ? `${stale} unchanged for ${expiryDays}+ days` : null,
+  ].filter((p): p is string => p !== null)
+
+  if (isLoading) {
+    return <p className="text-sm text-soft">Loading...</p>
+  }
+
+  const stat = 'flex items-baseline gap-2 rounded-lg border px-3.5 py-2.5'
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-            {getGreeting()},
-          </p>
-          <h1 className="mt-0.5 text-2xl font-bold text-kavach-500">{username}</h1>
+    <div className="flex grow flex-col gap-3.5">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex-[1_1_220px]">
+          <h1 className="text-xl font-semibold tracking-tight text-text">
+            {getGreeting()}, {username}
+          </h1>
+          <p className="text-xs text-muted">{today}</p>
         </div>
-
-        {/* Stats chips */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
-            <KeyRound className="h-3.5 w-3.5 text-kavach-500" />
-            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{credentials.length}</span>
-            <span className="text-xs text-zinc-500">credentials</span>
-          </div>
-          {withUrls > 0 && (
-            <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
-              <Globe className="h-3.5 w-3.5 text-kavach-500" />
-              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{withUrls}</span>
-              <span className="text-xs text-zinc-500">with URL</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900">
-            <ShieldCheck className="h-3.5 w-3.5 text-green-400" />
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">Vault secured</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Search + Add */}
-      <div className="flex items-center gap-3">
         <CredentialSearch ref={searchRef} value={search} onChange={(v) => { setSearch(v); setPage(0) }} />
-        <Link to="/add">
-          <Button size="sm">
-            <PlusCircle className="mr-1.5 h-4 w-4" />
-            Add
-          </Button>
-        </Link>
-        <Link to="/add-note">
-          <Button size="sm" variant="secondary">
-            <NotebookPen className="mr-1.5 h-4 w-4" />
-            Note
-          </Button>
+        <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
+          Import CSV
+        </Button>
+        <Button size="sm" kbd="N" aria-label="New item" aria-keyshortcuts="N" onClick={() => navigate('/add')}>
+          New item
+        </Button>
+      </div>
+
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      <div className="flex flex-wrap gap-2.5">
+        <div className={cn(stat, 'flex-[1_1_150px] border-border bg-panel')}>
+          <span className="text-lg font-semibold text-text">{credentials.length}</span>
+          <span className="text-muted">items</span>
+        </div>
+        <div className={cn(stat, 'flex-[1_1_150px] border-border bg-panel')}>
+          <span className="text-lg font-semibold text-text">{favourites.length}</span>
+          <span className="text-muted">favourites</span>
+        </div>
+        <Link
+          to="/health"
+          className={cn(
+            stat,
+            'flex-[2_1_280px] no-underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+            attention > 0 ? 'border-warn-border bg-warn-bg text-warn-text' : 'border-border bg-panel text-muted',
+          )}
+        >
+          <span className={cn('text-lg font-semibold', attention === 0 && 'text-text')}>{attention}</span>
+          <span>need attention{attentionParts.length > 0 && `: ${attentionParts.join(', ')}`}</span>
         </Link>
       </div>
 
-      {/* Filter bar — starred toggle + tags */}
-      {(anyStarred || allTags.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {anyStarred && (
+      {favourites.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-2xs uppercase tracking-[0.08em] text-muted">Favourites</span>
+          {favourites.map((c) => (
+            <FavouritePill key={c.id} cred={c} />
+          ))}
+        </div>
+      )}
+
+      <div className="flex grow flex-col overflow-hidden rounded-panel border border-border bg-panel shadow-surface">
+        <div role="group" aria-label="Filter items" className="flex flex-wrap items-center gap-1.5 border-b border-border px-3 py-2.5">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={filter === f.id}
+              onClick={() => { setFilter(f.id); setPage(0) }}
+              className={cn(
+                'h-[26px] rounded-full border px-2.5 text-xs transition-colors',
+                'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+                filter === f.id
+                  ? 'border-accent-line bg-accent/15 text-text'
+                  : 'border-border bg-transparent text-soft hover:bg-row-hover',
+              )}
+            >
+              {f.label} <span className="font-mono opacity-80">{filterCounts[f.id]}</span>
+            </button>
+          ))}
+          {activeTag !== null && (
             <button
               type="button"
-              onClick={() => { setShowStarredOnly((v) => !v); setPage(0) }}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                showStarredOnly
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-              }`}
+              aria-label={`Clear tag filter #${activeTag}`}
+              onClick={() => { setActiveTag(null); setPage(0) }}
+              className="ml-1 inline-flex h-[26px] items-center gap-1.5 rounded-full border border-accent-line bg-accent/15 px-2.5 font-mono text-xs text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Star className={`h-3 w-3 ${showStarredOnly ? 'fill-white' : ''}`} />
-              Starred
+              #{activeTag}
+              <X size={12} aria-hidden="true" />
             </button>
           )}
-          {anyStarred && allTags.length > 0 && (
-            <span className="h-4 border-l border-zinc-300 dark:border-zinc-700" />
-          )}
-          {allTags.length > 0 && (
-            <>
-              <Tag className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => { setActiveTag(activeTag === tag ? null : tag); setPage(0) }}
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                    activeTag === tag
-                      ? 'bg-kavach-500 text-white'
-                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  {tag}
-                  {activeTag === tag && <X className="h-3 w-3" />}
-                </button>
-              ))}
-            </>
-          )}
         </div>
-      )}
 
-      {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          {search ? (
-            <>
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                <SearchX className="h-7 w-7 text-zinc-500" />
-              </div>
-              <p className="text-base font-semibold text-zinc-700 dark:text-zinc-300">No results found</p>
-              <p className="mt-1 text-sm text-zinc-500">
-                No credentials match <span className="text-zinc-400">"{search}"</span>. Try a different search.
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-kavach-500/10">
-                <ShieldOff className="h-7 w-7 text-kavach-500" />
-              </div>
-              <p className="text-base font-semibold text-zinc-700 dark:text-zinc-300">Your vault is empty</p>
-              <p className="mt-1 text-sm text-zinc-500">Add your first credential to get started.</p>
-              <Link to="/add" className="mt-5">
-                <Button>
-                  <PlusCircle className="mr-1.5 h-4 w-4" />
-                  Add credential
-                </Button>
-              </Link>
-            </>
-          )}
-        </div>
-      )}
+        {credentials.length === 0 ? (
+          <div className="flex grow flex-col items-center justify-center gap-1 px-3 py-16 text-center">
+            <ShieldOff className="mb-2 h-7 w-7 text-muted" aria-hidden="true" />
+            <p className="text-base font-semibold text-text">Your vault is empty</p>
+            <p className="text-sm text-muted">Add your first item to get started.</p>
+            <Button className="mt-4" onClick={() => navigate('/add')}>
+              Add your first item
+            </Button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="grow px-3 py-7 text-center text-muted">
+            {search.trim() ? `No items match "${search.trim()}".` : 'No items match these filters.'}
+          </p>
+        ) : (
+          <ul className="grow">
+            {paginated.map((cred) => {
+              const health = healthById?.get(cred.id)
+              return (
+                <VaultRow
+                  key={cred.id}
+                  cred={cred}
+                  strength={health ? strengthBucket(health.strengthScore) : undefined}
+                  expiryDays={expiryDays}
+                  onToggleFavourite={(id) => favouriteMutation.mutate(id)}
+                />
+              )
+            })}
+          </ul>
+        )}
 
-      <div className="space-y-2">
-        {paginated.map((cred, idx) => {
-          const isNote = cred.credentialType === 'NOTE'
-          const editPath = isNote ? `/edit-note/${cred.id}` : `/edit/${cred.id}`
-          const prev = paginated[idx - 1]
-          const showStarredHeader = hasBothGroups && cred.favourite && !prev?.favourite
-          const showOthersHeader = hasBothGroups && !cred.favourite && prev?.favourite
-          return (
-            <div key={cred.id}>
-            {(showStarredHeader || showOthersHeader) && (
-              <div className="flex items-center gap-2 pb-1 pt-2">
-                {showStarredHeader && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
-                <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-                  {showStarredHeader ? 'Starred' : 'All credentials'}
-                </span>
-                <div className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
-              </div>
-            )}
-              <Card className="flex items-center justify-between border border-kavach-500/25 p-4 transition-colors hover:border-kavach-500/60 hover:bg-kavach-500/10 dark:hover:bg-kavach-950/20">
-                <div className="flex min-w-0 items-center gap-3">
-                  {isNote ? (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kavach-500/15">
-                      <StickyNote className="h-4 w-4 text-kavach-500" />
-                    </div>
-                  ) : (
-                    <CredentialAvatar purpose={cred.purpose} />
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">{cred.purpose}</p>
-                    {!isNote && cred.username && (
-                      <p className="truncate text-xs text-zinc-400">{cred.username}</p>
-                    )}
-                    {!isNote && cred.url && (
-                      <a
-                        href={cred.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate text-xs text-kavach-500 hover:text-kavach-400"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {cred.url}
-                      </a>
-                    )}
-                    {!isNote && cred.notes && (
-                      <p className="truncate text-xs italic text-zinc-500">{cred.notes}</p>
-                    )}
-                    {isNote && (
-                      <p className="text-xs text-kavach-500/70">Secure note</p>
-                    )}
-                    {(cred.tags ?? []).length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {(cred.tags ?? []).map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center rounded-full bg-kavach-500/15 px-2 py-0.5 text-xs font-medium text-kavach-400"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="ml-3 flex shrink-0 items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={cred.favourite ? 'Unstar' : 'Star'}
-                    onClick={() => favouriteMutation.mutate(cred.id)}
-                  >
-                    <Star
-                      className={`h-3.5 w-3.5 ${cred.favourite ? 'fill-amber-400 text-amber-400' : 'text-zinc-500'}`}
-                    />
-                  </Button>
-                  <OtpModal credentialId={cred.id} purpose={cred.purpose} credentialType={cred.credentialType}>
-                    <Button size="sm" variant="secondary">
-                      {isNote ? 'Reveal note' : 'Reveal'}
-                    </Button>
-                  </OtpModal>
-                  <Link to={editPath}>
-                    <Button size="sm" variant="ghost" aria-label="Edit">
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label="Delete"
-                    onClick={() => setDeleteTarget({ id: cred.id, purpose: cred.purpose })}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          )
-        })}
+        {filtered.length > 0 && (
+          <div className="-mt-px border-t border-border px-3 py-2">
+            {/* -mt-px: when the list fills the panel, the last row's border and this one
+                overlap into a single line instead of a doubled 2 px one. */}
+            <Pagination page={safePage} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
+          </div>
+        )}
       </div>
-
-      <Dialog.Root open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-hidden dark:border-zinc-700 dark:bg-zinc-900">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                <Trash2 className="h-5 w-5 text-red-400" />
-              </div>
-              <div>
-                <Dialog.Title className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                  Delete credential?
-                </Dialog.Title>
-                <Dialog.Description className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {deleteTarget?.purpose}
-                </Dialog.Description>
-              </div>
-            </div>
-            <p className="mb-5 text-sm text-zinc-600 dark:text-zinc-400">
-              This will permanently remove the credential and its password. This cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Dialog.Close asChild>
-                <Button variant="ghost" size="sm">Cancel</Button>
-              </Dialog.Close>
-              <Button
-                size="sm"
-                className="bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500"
-                onClick={() => {
-                  if (deleteTarget) deleteMutation.mutate(deleteTarget.id)
-                  setDeleteTarget(null)
-                }}
-              >
-                Delete
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-zinc-400">
-            Page {page + 1} of {totalPages}
-          </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
     </div>
   )
 }

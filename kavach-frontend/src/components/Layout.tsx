@@ -84,7 +84,7 @@ export function Layout() {
               icon={<Activity className={iconClass} aria-hidden="true" />}
               label="Health"
               count={summary.counts.attention}
-              countClassName="text-fair-text"
+              countClassName={summary.counts.attention > 0 ? 'text-fair-text' : undefined}
             />
             <NavItem to="/audit" icon={<ListChecks className={iconClass} aria-hidden="true" />} label="Audit log" />
             <NavItem to="/settings" icon={<Settings className={iconClass} aria-hidden="true" />} label="Settings" />

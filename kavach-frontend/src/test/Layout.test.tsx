@@ -84,6 +84,21 @@ describe('Layout', () => {
     expect(await screen.findByRole('link', { name: withCount('Health', 2) })).toBeInTheDocument()
   })
 
+  it('shows the Health count in fair only when something needs attention, muted at 0', async () => {
+    const { unmount } = renderLayout()
+    const busy = await screen.findByRole('link', { name: withCount('Health', 2) })
+    expect(within(busy).getByText('2')).toHaveClass('text-fair-text')
+    unmount()
+
+    vi.mocked(listCredentials).mockResolvedValue([cred(1), cred(2)])
+    vi.mocked(getHealthReport).mockResolvedValue([health(1, 4), health(2, 4)])
+    renderLayout()
+    const calm = await screen.findByRole('link', { name: withCount('Health', 0) })
+    const count = within(calm).getByText('0')
+    expect(count).toHaveClass('text-muted')
+    expect(count).not.toHaveClass('text-fair-text')
+  })
+
   it('still counts stale passwords when the health report fails', async () => {
     vi.mocked(getHealthReport).mockRejectedValue(new Error('no session key'))
     renderLayout()

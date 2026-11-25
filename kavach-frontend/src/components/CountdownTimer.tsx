@@ -22,14 +22,14 @@ export function CountdownTimer({ seconds, onExpire }: CountdownTimerProps) {
   }, [remaining, onExpire])
 
   const pct = (remaining / seconds) * 100
-  const color = remaining > 10 ? 'text-zinc-400' : 'text-red-400'
+  const color = remaining > 10 ? 'text-soft' : 'text-weak-text'
 
   return (
     <span className={`tabular-nums text-xs ${color}`}>
       {remaining}s
-      <span className="ml-1 inline-block h-1.5 w-12 rounded-full bg-zinc-700 align-middle">
+      <span className="ml-1 inline-block h-1.5 w-12 rounded-full bg-track align-middle">
         <span
-          className="block h-full rounded-full bg-kavach-500 transition-all"
+          className="block h-full rounded-full bg-accent transition-all"
           style={{ width: `${pct}%` }}
         />
       </span>

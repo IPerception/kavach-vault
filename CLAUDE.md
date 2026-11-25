@@ -288,13 +288,29 @@ Maintenance release; no new features.
 ## Planned Features (in priority order)
 
 ### 1. UI redesign -- IN PROGRESS (start here)
-Status as of 2026-11-24: merged PR 1 (#42 tokens, fonts, gold accent), PR 3 (#44 logo
+Status as of 2026-11-25: merged PR 1 (#42 tokens, fonts, gold accent), PR 3 (#44 logo
 mark, favicon, setup webp, scripts/icons), PR 4+5 (#45 exe icon, UI primitives in
-src/components/ui) and PR 6 (#46 sidebar shell, status bar, lib/attention.ts). Password
-age now comes from `passwordChangedAt` (see Planned #2). The old `kavach-*` classes are a
-transitional gold ramp until PR 11; screen contents keep zinc styling until PRs 7-10.
-Next: PR 7 + PR 10 batched (forms; Audit + Health), then PR 8, PR 9, PR 11 separately.
-Known follow-up for PR 9: the sidebar Health count is amber even at 0. Handoffs that add an npm dependency must
+src/components/ui), PR 6 (#46 sidebar shell, status bar, lib/attention.ts), PR 7+10 (#48
+forms with Delete on Edit, Audit log, Health), PR 8 (#50 Settings on ui/Dialog,
+ImportDialog). Also merged: #47 passwordChangedAt, #49 CSP style nonce.
+PR 9 (Dashboard rewrite, OtpModal on Dialog, lib/date.ts, lib/url.ts safeHref, Health
+count muted at 0, vault row borders, clipboard clear fix) is OPEN from branch
+`redesign/dashboard`, tested by the owner incl. a real TOTP reveal. The clipboard clear
+had never worked: Firefox refuses clipboard writes outside a user gesture and Chromium
+refuses them without focus, so `useClipboard` now retries on the next click/key/focus.
+Owner feedback 2026-11-25, proposed by Claude but NOT yet approved by the owner:
+(a) visual PR -- sidebar brand = SVG mark + "Kavach" (Fraunces) + small tagline as real
+text (owner may supply wording; no raster logo), chip tones by type (website navy, tags
+gold tint, red/amber/green reserved for strength), dark-gold-dark gradient rule under
+page/section titles and only at sidebar group breaks (not under every item), warmer
+ivory dark-mode text ramp (contrast-checked; body text not gold);
+(b) separate PR -- New item AND Edit as dialogs over the vault instead of full screens.
+Then PR 11 (lock screen, setup wizard, remove `kavach-*` ramp and
+public/Kavach-Logo.png, docs incl. OFL font notice). Dev: open http://localhost:5173
+(typed in full -- Firefox autocompletes https and fails with SSL_ERROR_RX_RECORD_TOO_LONG);
+port 8080 serves the last Maven-packaged frontend, not live code.
+Read the plan's ADDENDUM 2 for deviations from the
+original plan. Handoffs that add an npm dependency must
 say to install with Maven's bundled npm, or `npm ci` rejects the lockfile (in
 kavach-frontend, Bash: `PATH="$PWD/node:$PATH" node node/node_modules/npm/bin/npm-cli.js install`).
 
@@ -382,6 +398,16 @@ jpackage produces a `.deb` (requires `dpkg-dev`) or `.rpm` (requires `rpm-build`
 macOS, add an `ubuntu-latest` job to `release.yml` and attach the package.
 
 ## Dropped
+
+- **Automatic update check on load** -- replaced 2026-11-24 (#43) by a manual "Check for
+  updates" button in Settings. The banner never worked in the packaged app (CSP blocked
+  it), and enabling it would have contacted GitHub on every unlock; local-first wins.
+- **Other fixes for the Radix dialog scroll-lock CSP error** -- rejected 2026-11-24 in
+  favour of the per-request style nonce (#49): `style-src 'unsafe-inline'` (allows any
+  injected style); static CSS for `body[data-scroll-locked]` plus
+  `scrollbar-gutter: stable` (restores the lock but the library still tries to inject, so
+  the console error stays); replacing Radix Dialog with native `<dialog>` (large rewrite,
+  harder to test in jsdom).
 
 - **Per-credential TOTP storage** -- dropped 2026-05-30. Storing a credential's password
   and its TOTP secret in the same vault defeats the point of the second factor.
