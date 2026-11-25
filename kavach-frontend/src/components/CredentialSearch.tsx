@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import { Search } from 'lucide-react'
 
 interface CredentialSearchProps {
@@ -8,22 +8,29 @@ interface CredentialSearchProps {
 
 export const CredentialSearch = forwardRef<HTMLInputElement, CredentialSearchProps>(
   function CredentialSearch({ value, onChange }, ref) {
+    const id = useId()
     return (
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+      <div className="flex h-8 min-w-0 flex-[0_1_320px] items-center gap-2 rounded-control border border-border bg-input px-2.5 focus-within:ring-2 focus-within:ring-ring">
+        <label htmlFor={id} className="sr-only">
+          Search vault
+        </label>
+        <Search className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
         <input
+          id={id}
           ref={ref}
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Search credentials..."
-          className="w-full rounded-md border border-zinc-300 bg-white py-2 pl-9 pr-16 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-kavach-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          placeholder="Search name, username, website or #tag"
+          className="min-w-0 grow border-none bg-transparent font-mono text-xs text-text outline-hidden placeholder:text-muted"
         />
         {!value && (
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden gap-0.5 sm:flex">
-            <kbd className="rounded-sm border border-zinc-300 bg-zinc-100 px-1 py-0.5 text-[10px] text-zinc-400 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-500">Ctrl</kbd>
-            <kbd className="rounded-sm border border-zinc-300 bg-zinc-100 px-1 py-0.5 text-[10px] text-zinc-400 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-500">K</kbd>
-          </span>
+          <kbd
+            aria-hidden="true"
+            className="pointer-events-none hidden rounded-sm border border-border px-1.5 font-mono text-2xs text-muted sm:block"
+          >
+            Ctrl K
+          </kbd>
         )}
       </div>
     )
