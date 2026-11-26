@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Activity, Home, ListChecks, LockKeyhole, Moon, Plus, Settings, Sun } from 'lucide-react'
+import { Activity, Home, ListChecks, LockKeyhole, Plus, Settings } from 'lucide-react'
 import { useKavachStore } from '../store/useKavachStore'
 import { useInactivityWatcher } from '../hooks/useInactivityWatcher'
 import { useVaultAttention } from '../hooks/useVaultAttention'
@@ -9,7 +9,7 @@ import { itemLinkState } from '../lib/itemRoutes'
 import { AutoLockTimer } from './AutoLockTimer'
 import { ExpiryBanner } from './ExpiryBanner'
 import { Button } from './ui/Button'
-import { IconButton } from './ui/IconButton'
+import { ColorModeToggle } from './ColorModeToggle'
 import { cn } from './ui/cn'
 import { Wordmark } from './brand/Wordmark'
 
@@ -59,8 +59,6 @@ function NavItem({
 }
 
 export function Layout() {
-  const colorMode = useKavachStore((s) => s.colorMode)
-  const setColorMode = useKavachStore((s) => s.setColorMode)
   const doLogout = useKavachStore((s) => s.doLogout)
   const location = useLocation()
   const { pathname, search } = location
@@ -69,7 +67,6 @@ export function Layout() {
 
   const tags = tagCounts(credentials)
   const activeTag = pathname === '/dashboard' ? new URLSearchParams(search).get('tag') : null
-  const nextMode = colorMode === 'dark' ? 'light' : 'dark'
   const iconClass = 'h-[15px] w-[15px] shrink-0'
 
   // Layout renders at the background location, so `location` is always the screen the
@@ -156,18 +153,7 @@ export function Layout() {
                 <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
                 Lock
               </Button>
-              <IconButton
-                label={`Switch to ${nextMode} mode`}
-                size={32}
-                className="border-border bg-raised"
-                onClick={() => setColorMode(nextMode)}
-              >
-                {colorMode === 'dark' ? (
-                  <Sun className="h-3.5 w-3.5" aria-hidden="true" />
-                ) : (
-                  <Moon className="h-3.5 w-3.5" aria-hidden="true" />
-                )}
-              </IconButton>
+              <ColorModeToggle />
             </div>
           </div>
         </nav>

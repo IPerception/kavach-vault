@@ -29,10 +29,11 @@ fs.writeFileSync(path.join(packaging, 'kavach.png'), await render(svg('app-icon.
 // Favicon fallback: the 32 px mark, no tile.
 fs.writeFileSync(path.join(publicDir, 'favicon-32.png'), await render(svg('mark-32.svg'), 32))
 
-// Setup wizard image: the illustrated poster, square, small enough to be cheap.
-await sharp(path.join(publicDir, 'Kavach-Logo.png'))
-  .resize(768, 768, { fit: 'cover' })
+// Lock screen and setup wizard hero: the gold shield banner, cropped to 2:1 (trims empty
+// space above and below) at 2x the 560 px lock card width.
+await sharp(path.join(here, 'kavach-banner.png'))
+  .resize(1120, 560, { fit: 'cover' })
   .webp({ quality: 80, effort: 6 })
-  .toFile(path.join(publicDir, 'kavach-setup.webp'))
+  .toFile(path.join(publicDir, 'kavach-banner.webp'))
 
 console.log('icons generated')

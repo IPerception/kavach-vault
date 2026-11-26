@@ -158,8 +158,8 @@ Uses Spring's `ApplicationEventPublisher` (Observer pattern). Services publish e
 ### Frontend State
 
 ```typescript
-// Zustand store — auth/lock state only
-{ status: 'locked' | 'unlocked' | 'setup', lastActivity: number }
+// Zustand store - auth/lock state and UI preference only
+{ status: 'loading' | 'locked' | 'unlocked' | 'setup', lastActivity: number, colorMode: 'light' | 'dark' }
 ```
 
 TanStack Query handles all API server state (caching, loading, error, background refetch). React Hook Form + Zod for forms, with matching Bean Validation on the backend.
@@ -287,64 +287,35 @@ Maintenance release; no new features.
 
 ## Planned Features (in priority order)
 
-### 1. UI redesign -- IN PROGRESS (start here)
-Status as of 2026-11-25: merged PR 1 (#42 tokens, fonts, gold accent), PR 3 (#44 logo
-mark, favicon, setup webp, scripts/icons), PR 4+5 (#45 exe icon, UI primitives in
-src/components/ui), PR 6 (#46 sidebar shell, status bar, lib/attention.ts), PR 7+10 (#48
-forms with Delete on Edit, Audit log, Health), PR 8 (#50 Settings on ui/Dialog,
-ImportDialog). Also merged: #47 passwordChangedAt, #49 CSP style nonce.
-PR 9 (Dashboard rewrite, OtpModal on Dialog, lib/date.ts, lib/url.ts safeHref, Health
-count muted at 0, vault row borders, clipboard clear fix) merged as #51. The clipboard
-clear had never worked: Firefox refuses clipboard writes outside a user gesture and
-Chromium refuses them without focus, so `useClipboard` retries on the next click/key/focus.
-Visual polish merged as #52: sidebar Wordmark with the
-tagline "Personal Password Manager" (real text, centred name), Chip tones `site` (navy) /
-`tag` (gold tint) with red/amber/green reserved for strength, `rule-gold` / `gold-line`
-utilities (dark-gold-dark) under page headers and at sidebar group breaks only, warm
-ivory dark-mode text ramp. Tried and deferred by the owner: the gold banner image in the
-sidebar corner (trial image + compose.py in docs/notes/brand-preview/; source is the
-untracked `Kavach Gold Shield Cybersecurity Banner.png` in the repo root).
-Item dialogs PR (branch `redesign/item-dialogs`, OPEN): New item / Edit / Edit note are
-route-backed dialogs (`lib/itemRoutes.ts`, `components/ItemDialog.tsx`): the URL stays
-/add, /edit/:id..., the link passes `state.background` and App renders the screens at that
-background, so the opening screen (Vault or Health) stays live underneath and refreshes
-after a save; Back/Escape/X/outside click close; direct load shows it over the dashboard.
-"+ New item" is a sidebar button (action, not a nav row), N works on every screen.
-Next: PR 11 -- lock screen with the gold banner as hero (approved; move the
-banner source into scripts/icons and generate the webp via generate.mjs), setup wizard,
-remove `kavach-*` ramp and public/Kavach-Logo.png, docs incl. OFL font notice. Dev: open http://localhost:5173
-(typed in full -- Firefox autocompletes https and fails with SSL_ERROR_RX_RECORD_TOO_LONG);
-port 8080 serves the last Maven-packaged frontend, not live code.
-Read the plan's ADDENDUM 2 for deviations from the
-original plan. Handoffs that add an npm dependency must
-say to install with Maven's bundled npm, or `npm ci` rejects the lockfile (in
-kavach-frontend, Bash: `PATH="$PWD/node:$PATH" node node/node_modules/npm/bin/npm-cli.js install`).
+### 1. UI redesign -- DONE, final PR open (move to Completed on release)
+Merged: #42 tokens/fonts, #44 logo mark + favicon, #45 exe icon + UI primitives, #46 sidebar
+shell, #48 forms + Audit + Health, #50 Settings, #51 Dashboard + clipboard clear fix, #52
+visual polish, #53 New item / Edit as dialogs. Also #47 passwordChangedAt, #49 CSP nonce.
+PR 11 (branch `redesign/lock-screen`, OPEN): lock screen and setup wizard on a shared
+`BrandHero` frame (gold banner on top, colour toggle in the corner, trust footer), the
+transitional `kavach-*` gold ramp deleted, `public/Kavach-Logo.png` and
+`kavach-setup.webp` removed (the poster stays only as `docs/assets/kavach-logo.png`),
+OFL font notice in THIRD-PARTY-NOTICES.md, docs/LIBRARIES.md + docs/ARCHITECTURE.md
+(sections 8-9: token sheet, strength source) updated.
+Setup wizard NOT yet checked visually by the owner (skipped; covered by SetupWizard.test):
+check it with a throwaway DB (`--spring.datasource.url=jdbc:sqlite:C:/temp/x.db`).
 
-- **Plan:** `docs/notes/redesign-plan.md` (gitignored, local). Ordered PRs, files, tests,
-  risks. Read its ADDENDUM at the end first -- it records later user decisions.
-- **Approved design:** "D. Combo" on the private design canvas
-  https://claude.ai/artifact/DandMh9VcbAAHo1xnC659M (artboards `Prototype` and
-  `Logo-Mark`). Local source: `docs/notes/redesign-canvas/project/`. The `t` object in
-  `Prototype.dc.html` holds every light/dark colour token.
-- **Decisions:** C ("Hearth") layout -- sidebar, greeting, summary strip -- at B
-  ("Console") density; vault rows show star, initial tile, name + username, chips in fixed
-  order website -> strength -> #tag, updated (amber when stale), Copy username + Reveal
-  (TOTP flow unchanged), row hover; slim favourites pill strip; one shared Pagination
-  component (first/prev/next/last) for Dashboard (client, 25) and Audit log (server, 20);
-  light + dark mode with ONE gold accent from the logo (navy secondary); IBM Plex Sans/Mono
-  + Fraunces, bundled locally (CSP blocks font CDNs); B-style lock screen; Delete moves
-  from list rows to the Edit screens.
-- **Logo:** a flat SVG mark (shield + padlock) goes in the sidebar, lock screen, favicon
-  and as the `Kavach.exe` icon (jpackage `--icon`, none today). The illustrated poster
-  (`public/Kavach-Logo.png`, 2.2 MB) stays only in the setup wizard as an optimised
-  ~100 KB image, plus README/landing page; it is removed from the header, lock screen and
-  Settings dialogs.
-- **Per-row strength:** the dashboard reuses `GET /credentials/health` (server scores in
-  memory, client gets score only) joined by id. Rejected: adding strength to the list DTO
-  (list would need the master key and decrypt on every fetch) and storing a score at save
-  time (writes "this password is weak" into kavach.db and every backup; backfill needs
-  the master key).
-- **Set aside:** pure A ("Quiet"), B and C directions; the five accent themes.
+What future UI work must respect (details in docs/ARCHITECTURE.md sections 8-9):
+- One token sheet, `src/index.css`; light + dark, ONE gold accent (navy secondary);
+  red/amber/green only for strength/problems. New tokens also go in `components/ui/cn.ts`.
+- Item dialogs are route-backed (`lib/itemRoutes.ts`): links into /add, /edit/:id... pass
+  `state: itemLinkState(location)`; App renders the screens at the background location.
+- Brand images come from `scripts/icons/generate.mjs` (sources: the SVG marks and
+  `kavach-banner.png`); never hand-edit the outputs.
+- The gold banner in the sidebar corner was tried and deferred by the owner (trial image
+  and compose.py in docs/notes/brand-preview/).
+- Dev: open http://localhost:5173 typed in full (Firefox autocompletes https and fails
+  with SSL_ERROR_RX_RECORD_TOO_LONG); port 8080 serves the last Maven-packaged frontend.
+- Handoffs that add an npm dependency must say to install with Maven's bundled npm, or
+  `npm ci` rejects the lockfile (in kavach-frontend, Bash:
+  `PATH="$PWD/node:$PATH" node node/node_modules/npm/bin/npm-cli.js install`).
+- Approved design canvas: https://claude.ai/artifact/DandMh9VcbAAHo1xnC659M (local source
+  `docs/notes/redesign-canvas/project/`); plan with addenda `docs/notes/redesign-plan.md`.
 
 ### 2. Password age = password changes only -- DONE (feat/password-changed-at)
 `credential.password_changed_at` (changeset 012, backfilled from `updated_at`) is set on

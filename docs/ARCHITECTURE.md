@@ -313,3 +313,46 @@ flowchart TD
     CS --> PUB
     PUB --> AUDIT
 ```
+
+---
+
+## 8. Frontend Design Tokens
+
+The UI is styled from one token sheet, `kavach-frontend/src/index.css` (Tailwind 4,
+CSS-first, no `tailwind.config.js`):
+
+- Raw tokens are CSS variables named `--k-*`. `:root` holds the light values; `:root.dark`
+  overrides them. `useKavachStore.setColorMode` toggles the `dark` class on `<html>`.
+- `@theme inline` maps each token to a Tailwind colour (`bg-panel`, `text-soft`,
+  `border-border`, `bg-accent/15`...). `inline` keeps the `var()` reference, so opacity
+  modifiers work and dark mode flips the value without `dark:` variants in components.
+- One accent: gold, taken from the logo (`accent`, `accent-line`, `accent-text`), with navy
+  (`tile`, `tile-fg`) as the secondary. Red / amber / green (`weak-*`, `fair-*`, `ok-*`)
+  mean password strength or a problem and nothing else.
+- `src/components/ui/cn.ts` extends `tailwind-merge` with these token names; add a new
+  token there too, or `cn()` may drop one of two conflicting classes.
+- Brand assets are generated, not hand-edited: `scripts/icons/generate.mjs` builds the
+  favicon, the `Kavach.exe` icon and the lock-screen banner from the sources in that
+  folder.
+
+## 9. Per-row Password Strength: where the score comes from
+
+The vault list shows a strength chip per password, but the list endpoint
+(`GET /api/credentials`) never decrypts and never needs the master key. The chips come
+from the Health endpoint (`GET /api/credentials/health`), which decrypts each password in
+memory, scores it, zeroes the buffers and returns only `id`, score, label, duplicate flag
+and dates. The dashboard joins the two by id (`useVaultAttention`). While health is
+loading or fails, the chips are simply absent; the list never waits for it.
+
+Rejected alternatives:
+
+- **Strength on the list DTO.** The list would depend on the session key and decrypt the
+  whole vault on every fetch, and five screens read that query.
+- **Score stored at save time.** It would write "this account's password is weak" into
+  `kavach.db` and every rolling backup, readable by anyone holding the file. Existing rows
+  would need a backfill, which needs the master key, so it could not be a Liquibase
+  changeset.
+
+"Needs attention" combines weak (score <= 1) with stale passwords: password age is
+`passwordChangedAt` (only set when the password itself changes), falling back to
+`updatedAt`, compared with the user's expiry setting (default 90 days).

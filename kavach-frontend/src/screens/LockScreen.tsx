@@ -3,10 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Lock } from 'lucide-react'
 import { login } from '../api/auth'
 import { useKavachStore } from '../store/useKavachStore'
-import { Card, CardHeader, CardTitle } from '../components/ui/Card'
+import { BrandHero } from '../components/BrandHero'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 
@@ -33,7 +32,10 @@ export function LockScreen() {
       const username = storedUsername || (data.username ?? '')
       return login({ username, password: data.masterPassword })
     },
-    onSuccess: () => {
+    onSuccess: (_result, data) => {
+      // Remember who unlocked, so the next lock screen greets them and skips the username
+      // field. Setup stores it too, but localStorage is per origin (dev :5173 vs :8080).
+      if (!storedUsername && data.username) localStorage.setItem('kavach_username', data.username)
       unlock()
       navigate('/dashboard')
     },
@@ -43,58 +45,49 @@ export function LockScreen() {
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-3xl overflow-hidden p-0!">
-        <div className="flex h-[360px]">
-          {/* Left column - logo panel */}
-          <div className="relative w-2/4 bg-zinc-100 dark:bg-zinc-800">
-            <img
-              src="/Kavach-Logo.png"
-              alt="Kavach"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          </div>
+    <BrandHero>
+      <div className="rule-gold mb-5 flex items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-semibold text-text">Unlock vault</h1>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-chip-border bg-chip px-2.5 py-0.5 font-mono text-2xs text-soft">
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-fair-bar" />
+          locked
+        </span>
+      </div>
 
-          {/* Right column - form */}
-          <div className="flex flex-1 flex-col justify-center overflow-y-auto p-8">
-            <CardHeader>
-              <div className="mb-2 flex items-center justify-center gap-2">
-                <Lock className="h-5 w-5 text-zinc-500" />
-                <CardTitle className="text-center font-bold underline text-kavach-500">Vault locked</CardTitle>
-              </div>
-              {storedUsername && (
-                <p className="text-center text-sm text-zinc-400">
-                  Welcome back, <span className="font-medium text-zinc-200">{storedUsername}</span>
-                </p>
-              )}
-            </CardHeader>
+      <p className="mb-4 text-sm text-soft">
+        {storedUsername ? (
+          <>
+            Welcome back, <span className="font-medium text-text">{storedUsername}</span>.{' '}
+          </>
+        ) : null}
+        Kavach locks itself after 10 minutes idle.
+      </p>
 
-            <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
-              {!storedUsername && (
-                <Input
-                  id="username"
-                  label="Username"
-                  autoComplete="username"
-                  error={errors.username?.message}
-                  {...register('username')}
-                />
-              )}
-              <Input
-                id="masterPassword"
-                label="Master password"
-                type="password"
-                autoComplete="current-password"
-                autoFocus
-                error={errors.masterPassword?.message}
-                {...register('masterPassword')}
-              />
-              <Button type="submit" className="w-full" loading={mutation.isPending}>
-                Unlock
-              </Button>
-            </form>
-          </div>
-        </div>
-      </Card>
-    </div>
+      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
+        {!storedUsername && (
+          <Input
+            id="username"
+            label="Username"
+            autoComplete="username"
+            error={errors.username?.message}
+            {...register('username')}
+          />
+        )}
+        <Input
+          id="masterPassword"
+          label="Master password"
+          type="password"
+          mono
+          autoComplete="current-password"
+          autoFocus
+          error={errors.masterPassword?.message}
+          {...register('masterPassword')}
+        />
+        <Button type="submit" className="w-full" kbd="Enter" aria-label="Unlock" loading={mutation.isPending}>
+          Unlock
+        </Button>
+        <p className="text-center text-xs text-muted">5 failed attempts lock unlocking for 15 minutes.</p>
+      </form>
+    </BrandHero>
   )
 }

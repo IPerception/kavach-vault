@@ -10,7 +10,7 @@ client.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or not authenticated — let callers decide what to do
+      // Token expired or not authenticated - let callers decide what to do
     }
     return Promise.reject(error)
   }
