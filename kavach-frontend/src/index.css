@@ -39,12 +39,6 @@
   --k-star-off: #B8B3A8;
   --k-ring: #85621A;
   --k-shadow: 0 1px 2px rgba(28,31,36,0.05), 0 12px 32px rgba(28,31,36,0.07);
-  /* TRANSITIONAL kavach-400..700, shifted darker in light mode so gold text on white
-     stays readable (500 = accent-text, ~5.6:1). Same idea as the v1.3.0 contrast fix. */
-  --k-gold-400: #C99A3B;
-  --k-gold-500: #85621A;
-  --k-gold-600: #6B4F15;
-  --k-gold-700: #523C10;
 }
 :root.dark {
   color-scheme: dark;
@@ -83,10 +77,6 @@
   --k-star-off: #3A424E;
   --k-ring: #D4A94A;
   --k-shadow: none;
-  --k-gold-400: #E2BE6E;
-  --k-gold-500: #D4A94A;
-  --k-gold-600: #C99A3B;
-  --k-gold-700: #85621A;
 }
 
 /* Utilities (bg-bg, text-soft, border-line, ...). `inline` keeps the var() reference so
@@ -125,29 +115,12 @@
   --color-star-off: var(--k-star-off);
   --color-ring: var(--k-ring);
   --shadow-surface: var(--k-shadow);
-
-  /* TRANSITIONAL, removed in PR 11: the mode-dependent middle of the kavach-* ramp. */
-  --color-kavach-400: var(--k-gold-400);
-  --color-kavach-500: var(--k-gold-500);
-  --color-kavach-600: var(--k-gold-600);
-  --color-kavach-700: var(--k-gold-700);
 }
 
 @theme {
   /* Brand constants (the logo) */
   --color-navy: #1E3354;
   --color-gold: #D4A94A;
-
-  /* TRANSITIONAL: the old kavach-* accent classes now resolve to a gold ramp (400..700
-     are mode-dependent, see @theme inline above). Removed in PR 11 once nothing
-     references them. */
-  --color-kavach-50: #FBF5E6;
-  --color-kavach-100: #F6EACB;
-  --color-kavach-200: #EEDAA2;
-  --color-kavach-300: #E8CB88;
-  --color-kavach-800: #6B4F15;
-  --color-kavach-900: #523C10;
-  --color-kavach-950: #3A2A0A;
 
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;

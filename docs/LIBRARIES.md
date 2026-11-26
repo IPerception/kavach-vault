@@ -69,17 +69,17 @@ The tradeoff is bundle size (~13 KB vs. 0 for fetch), which is acceptable here.
 
 ---
 
-### Radix UI Primitives (`@radix-ui/react-dialog`, `@radix-ui/react-label`)
-**Purpose:** Accessible, unstyled UI primitives for the OTP modal and form labels.
+### Radix UI Primitives (`@radix-ui/react-dialog`, `@radix-ui/react-label`, `@radix-ui/react-tooltip`)
+**Purpose:** Accessible, unstyled UI primitives: every dialog (reveal, New item / Edit, Settings, Import, confirmations), form labels and tooltips.
 
 Radix UI is a headless component library -- it handles keyboard navigation, focus trapping, ARIA attributes, and portal rendering without imposing any visual style. The OTP reveal modal uses `@radix-ui/react-dialog` because:
 - Focus is automatically trapped inside the modal (security-relevant: prevents accidental interaction with the vault while the password is visible).
 - Escape key closes the modal out of the box.
 - Portal rendering prevents z-index stacking issues.
 
-Alternatives: Headless UI (by Tailwind Labs), React Aria (by Adobe). Headless UI is tightly coupled to the Tailwind ecosystem (fine here, but limited to React+Vue). React Aria is more complete but significantly heavier. Radix hits the right balance of completeness and bundle size for our use (we only need Dialog and Label).
+Alternatives: Headless UI (by Tailwind Labs), React Aria (by Adobe). Headless UI is tightly coupled to the Tailwind ecosystem (fine here, but limited to React+Vue). React Aria is more complete but significantly heavier. Radix hits the right balance of completeness and bundle size for our use (Dialog, Label and Tooltip). `react-tooltip` sits on the same release line as `react-dialog` so they share one copy of Radix's internals; `components/ui/Tooltip.tsx` brings its own provider, so no app-level `TooltipProvider` is needed.
 
-We deliberately avoided "batteries-included" libraries like Material UI, Chakra UI, or shadcn/ui. Those either impose a design system that conflicts with our Tailwind/zinc palette or require significant configuration to match our dark theme.
+We deliberately avoided "batteries-included" libraries like Material UI, Chakra UI, or shadcn/ui. Those either impose a design system that conflicts with Kavach's own token sheet (`src/index.css`, light and dark with one gold accent) or require significant configuration to match it.
 
 ---
 
@@ -94,6 +94,20 @@ Single-function utility, no alternative needed. `classnames` is the older equiva
 **Purpose:** Resolves Tailwind class conflicts when merging className props (e.g., `p-4` from a default being overridden by `p-6` from a prop).
 
 Without `tailwind-merge`, passing `className="p-6"` to a Card that already has `p-4` would produce both classes in the DOM, and Tailwind would apply whichever one appears last in the generated CSS -- unpredictable. `tailwind-merge` detects that both are padding utilities and keeps only the last one. It's only needed in reusable components that accept `className` overrides (Button, Card, Input, Badge).
+
+---
+
+### `get-nonce`
+**Purpose:** Hands the per-request CSP style nonce to Radix's scroll lock.
+
+Radix dialogs lock page scrolling through `react-remove-scroll-bar`, which injects a `<style>` tag at runtime. The CSP allows styles only from `'self'` plus a per-request nonce, so that tag needs the nonce. `SpaController` writes it into a `csp-nonce` meta tag in `index.html`, and `src/cspNonce.ts` passes it to `get-nonce`, which `react-remove-scroll-bar` reads. Already a dependency of the Radix tree; declared directly so the import is explicit.
+
+---
+
+### Fonts (`@fontsource/ibm-plex-sans`, `@fontsource/ibm-plex-mono`, `@fontsource/fraunces`)
+**Purpose:** The three typefaces of the redesign, bundled with the app.
+
+Google Fonts or any font CDN is blocked by the CSP (`default-src 'self'`) and would also contact a third party on every launch, which a local-first password manager should not do. Fontsource packages ship the font files as npm dependencies, so Vite copies them into the build and they are served from Kavach's own origin. All three are under the SIL Open Font License 1.1; the notice is in `THIRD-PARTY-NOTICES.md`.
 
 ---
 
@@ -134,11 +148,11 @@ TypeScript catches type mismatches between API response shapes and component pro
 
 ---
 
-### Tailwind CSS (`tailwindcss`, `autoprefixer`, `postcss`)
+### Tailwind CSS (`tailwindcss`, `@tailwindcss/vite`)
 **Purpose:** Utility-first CSS framework.
 
-The entire UI uses Tailwind classes directly in JSX -- no separate CSS files, no CSS modules, no CSS-in-JS. This matches the Kavach design constraint: a minimal, dark (zinc-palette) UI that doesn't need a design system's component library. Tailwind generates only the classes actually used (via content scanning), keeping the CSS bundle small. The alternative would be plain CSS modules, which are fine but require naming and maintaining separate files. CSS-in-JS (styled-components, Emotion) adds a runtime cost that isn't justified here.
+The UI uses Tailwind classes directly in JSX, with Tailwind 4's CSS-first setup: there is no `tailwind.config.js`. `src/index.css` holds the design tokens (`--k-*` variables, light by default and overridden under `.dark`) and maps them to utilities through `@theme inline` (`bg-panel`, `text-soft`, `border-border`...), so dark mode flips values without `dark:` variants. Note that Tailwind 4 drops unknown classes silently, so a misspelt token name produces no build error. Tailwind generates only the classes actually used (via content scanning), keeping the CSS bundle small. The alternative would be plain CSS modules, which are fine but require naming and maintaining separate files. CSS-in-JS (styled-components, Emotion) adds a runtime cost that isn't justified here.
 
 ---
 
-*This document covers all 20 runtime and dev packages in `package.json`.*
+*This document covers the runtime and dev packages in `package.json`.*
